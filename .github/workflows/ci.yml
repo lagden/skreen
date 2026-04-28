@@ -1,10 +1,11 @@
-name: Publish
+name: CI
+
 on:
-  - push
-  - pull_request
+  push:
+  pull_request:
 
 jobs:
-  publish:
+  ci:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,6 +22,15 @@ jobs:
 
       - name: Install
         run: deno install
+
+      - name: Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install wasm-bindgen CLI
+        run: cargo install wasm-bindgen-cli
+
+      - name: Build
+        run: deno task build
 
       - name: Format
         run: deno task fmt:chk
