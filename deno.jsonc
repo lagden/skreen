@@ -10,8 +10,12 @@
 		"test": "deno test --allow-read --allow-net mod_test.ts",
 		"fmt:chk": "deno fmt --check"
 	},
+	"nodeModulesDir": "auto",
 	"imports": {
-		"@std/assert": "jsr:@std/assert@1.0.19"
+		"@std/assert": "jsr:@std/assert@1.0.19",
+		"postcss": "npm:postcss@8.5.12",
+		"tailwindcss": "npm:tailwindcss@4.2.4",
+		"@tailwindcss/postcss": "npm:@tailwindcss/postcss@4.2.4"
 	},
 	"fmt": {
 		"useTabs": true,

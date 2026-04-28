@@ -4,7 +4,14 @@
       "Bash(curl -s \"https://raw.githubusercontent.com/DioxusLabs/blitz/main/packages/anyrender/Cargo.toml\")",
       "Bash(curl -s \"https://raw.githubusercontent.com/DioxusLabs/blitz/main/packages/anyrender_vello_cpu/Cargo.toml\")",
       "Bash(cargo build *)",
-      "Bash(deno test *)"
+      "Bash(deno test *)",
+      "Bash(curl -L \"https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip\" -o /tmp/inter.zip)",
+      "Bash(unzip -j /tmp/inter.zip \"Inter Desktop/Inter-Regular.otf\" \"Inter Desktop/Inter-Bold.otf\" -d /Users/lagden/codelab/pkg/rust/skreen/fonts/)",
+      "Bash(unzip -l /tmp/inter.zip)",
+      "Bash(unzip -j /tmp/inter.zip \"extras/ttf/Inter-Regular.ttf\" \"extras/ttf/Inter-Bold.ttf\" -d /Users/lagden/codelab/pkg/rust/skreen/fonts/)",
+      "Bash(deno task *)",
+      "Bash(deno run *)",
+      "Bash(open example/receipt.png)"
     ]
   }
 }

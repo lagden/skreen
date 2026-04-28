@@ -10,10 +10,12 @@ crate-type = ["cdylib"]
 wasm-bindgen = "0.2"
 png = "0.17"
 
-blitz-html   = { git = "https://github.com/DioxusLabs/blitz" }
-blitz-dom    = { git = "https://github.com/DioxusLabs/blitz", default-features = false, features = ["svg", "woff"] }
-blitz-paint  = { git = "https://github.com/DioxusLabs/blitz" }
-blitz-traits = { git = "https://github.com/DioxusLabs/blitz" }
+blitz-html               = { git = "https://github.com/DioxusLabs/blitz" }
+blitz-dom                = { git = "https://github.com/DioxusLabs/blitz", default-features = false, features = ["svg", "woff"] }
+blitz-paint              = { git = "https://github.com/DioxusLabs/blitz" }
+blitz-traits             = { git = "https://github.com/DioxusLabs/blitz" }
+linebender_resource_handle = "0.1.1"
+parley                   = { version = "0.9", default-features = false, features = ["std"] }
 anyrender           = "0.8"
 anyrender_vello_cpu = "0.10"
 peniko = "0.6"

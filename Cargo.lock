@@ -1499,6 +1499,8 @@ dependencies = [
  "blitz-paint",
  "blitz-traits",
  "kurbo",
+ "linebender_resource_handle",
+ "parley",
  "peniko",
  "png",
  "wasm-bindgen",
