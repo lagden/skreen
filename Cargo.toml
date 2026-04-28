@@ -7,13 +7,13 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-wasm-bindgen = "0.2"
-png = "0.17"
+wasm-bindgen = "0.2.120"
+png = "0.18.1"
 
-blitz-html               = { git = "https://github.com/DioxusLabs/blitz" }
-blitz-dom                = { git = "https://github.com/DioxusLabs/blitz", default-features = false, features = ["svg", "woff"] }
-blitz-paint              = { git = "https://github.com/DioxusLabs/blitz" }
-blitz-traits             = { git = "https://github.com/DioxusLabs/blitz" }
+blitz-html               = { version = "0.3.0-alpha.2" }
+blitz-dom                = { version = "0.3.0-alpha.2", default-features = false, features = ["svg", "woff"] }
+blitz-paint              = { version = "0.3.0-alpha.2" }
+blitz-traits             = { version = "0.3.0-alpha.2" }
 linebender_resource_handle = "0.1.1"
 parley                   = { version = "0.9", default-features = false, features = ["std"] }
 anyrender           = "0.8"

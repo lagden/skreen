@@ -90,5 +90,6 @@ let WASM_VECTOR_LEN = 0;
 
 const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);
 const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
-const wasm = wasmInstantiated.instance.exports;
+const wasmInstance = wasmInstantiated.instance;
+const wasm = wasmInstance.exports;
 wasm.__wbindgen_start();

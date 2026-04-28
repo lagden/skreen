@@ -42,19 +42,19 @@ export async function withTailwind(html: string): Promise<string> {
 		import("@tailwindcss/postcss"),
 	]);
 
-	const htmlFile = await Deno.makeTempFile({ suffix: ".html" });
-	try {
-		await Deno.writeTextFile(htmlFile, html);
+	// Extract unique class names from the HTML to avoid filesystem scanning
+	const classes = [...html.matchAll(/class="([^"]+)"/g)]
+		.flatMap((m) => m[1].trim().split(/\s+/))
+		.filter(Boolean);
+	const unique = [...new Set(classes)].join(" ");
 
-		// @source tells Tailwind exactly which file to scan for class names
-		const cssInput = `@source "${htmlFile}";`;
-		const result = await postcss([tailwindcss()]).process(cssInput, {
-			from: "virtual:input.css",
-		});
+	// @source inline(...) generates only the needed utilities without scanning files,
+	// preventing Tailwind v4's automatic source detection from hanging on large repos
+	const cssInput = `@import "tailwindcss";\n@source inline("${unique}");`;
+	const result = await postcss([tailwindcss()]).process(cssInput, {
+		from: new URL(".", import.meta.url).pathname + "virtual.css",
+	});
 
-		const style = `<style>${result.css}</style>`;
-		return html.replace("</head>", `${style}\n</head>`);
-	} finally {
-		await Deno.remove(htmlFile);
-	}
+	const style = `<style>${result.css}</style>`;
+	return html.replace("</head>", `${style}\n</head>`);
 }
