@@ -1,0 +1,39 @@
+name: Publish
+on:
+  - push
+  - pull_request
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: lts
+          cache: true
+
+      - name: Install
+        run: deno install
+
+      - name: Format
+        run: deno task fmt:chk
+
+      - name: Lint
+        run: deno lint
+
+      - name: Typecheck
+        run: deno check mod.ts
+
+      - name: Test
+        run: deno task test
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        run: deno publish

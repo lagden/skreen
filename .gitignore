@@ -1,0 +1,11 @@
+# Rust build output
+/target/
+
+# Generated WASM bindings (produced by `deno task build`)
+/wasm/
+
+# Deno lock file (commit if you want reproducible installs)
+deno.lock
+
+# macOS
+.DS_Store
