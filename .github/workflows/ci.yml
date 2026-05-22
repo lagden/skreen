@@ -40,4 +40,4 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           jq --arg v "$VERSION" '.version = $v' deno.jsonc > deno.tmp.jsonc && mv deno.tmp.jsonc deno.jsonc
-          deno publish
+          deno publish --allow-dirty
