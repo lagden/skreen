@@ -44,7 +44,30 @@ await Deno.writeFile("receipt.png", png);
 > **Note:** `withTailwind` requires the Deno permissions `--allow-read`, `--allow-write`, `--allow-env`, and
 > `--allow-net` (first run only, to cache npm packages).
 
-See the full working example in [example/receipt.ts](example/receipt.ts) and [example/template.ts](example/template.ts).
+### With custom fonts
+
+Pass additional font files as `Uint8Array` via the `fonts` option. These fonts are registered with the renderer
+alongside the built-in Inter typeface and can be referenced by `font-family` in the HTML/CSS.
+
+```ts
+import { skreen, withTailwind } from "jsr:@tadashi/skreen";
+import { html } from "./template.ts";
+
+const roboto = await Deno.readFile("./Roboto-VariableFont.ttf");
+
+const processed = await withTailwind(html);
+const png = await skreen({
+	data: processed,
+	width: 320,
+	height: 0,
+	scale: 2,
+	fonts: [roboto],
+});
+
+await Deno.writeFile("receipt.png", png);
+```
+
+See the full working examples in [example/basic/](example/basic/) and [example/custom-font/](example/custom-font/).
 
 ## API
 
@@ -52,12 +75,13 @@ See the full working example in [example/receipt.ts](example/receipt.ts) and [ex
 
 Returns a PNG image as a `Uint8Array`.
 
-| Option   | Type     | Default | Description                                                               |
-| -------- | -------- | ------- | ------------------------------------------------------------------------- |
-| `data`   | `string` | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string. |
-| `width`  | `number` | `1200`  | Viewport width in logical pixels.                                         |
-| `height` | `number` | `800`   | Minimum viewport height in logical pixels.                                |
-| `scale`  | `number` | `2.0`   | Device pixel ratio. Use `2.0` for HiDPI/retina output.                    |
+| Option   | Type           | Default | Description                                                               |
+| -------- | -------------- | ------- | ------------------------------------------------------------------------- |
+| `data`   | `string`       | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string. |
+| `width`  | `number`       | `1200`  | Viewport width in logical pixels.                                         |
+| `height` | `number`       | `800`   | Minimum viewport height in logical pixels.                                |
+| `scale`  | `number`       | `2.0`   | Device pixel ratio. Use `2.0` for HiDPI/retina output.                    |
+| `fonts`  | `Uint8Array[]` | —       | Additional font files (TTF/OTF) registered alongside the built-in Inter.  |
 
 When `data` is a URL, the HTML is fetched before being passed to the WASM renderer. The final image height is determined
 by the rendered document height (capped at 4000 logical pixels).

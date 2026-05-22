@@ -6,8 +6,8 @@
 		".": "./mod.ts"
 	},
 	"tasks": {
-		"build": "deno run --allow-run --allow-write --allow-read build.ts",
-		"test": "deno test --allow-read --allow-net mod_test.ts",
+		"build": "deno run --allow-run --allow-write --allow-read --allow-ffi build.ts",
+		"test": "deno test --allow-read --allow-ffi --allow-net mod_test.ts",
 		"fmt:chk": "deno fmt --check"
 	},
 	"nodeModulesDir": "auto",

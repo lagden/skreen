@@ -5,6 +5,7 @@ export interface SkreenOptions {
 	width?: number;
 	height?: number;
 	scale?: number;
+	fonts?: Uint8Array[];
 }
 
 function isUrl(s: string): boolean {
@@ -20,9 +21,10 @@ export async function skreen({
 	width = 1200,
 	height = 800,
 	scale = 2.0,
+	fonts,
 }: SkreenOptions): Promise<Uint8Array> {
 	const html = isUrl(data) ? await fetch(data).then((r) => r.text()) : data;
-	return render_html(html, width, height, scale);
+	return render_html(html, width, height, scale, fonts ?? null);
 }
 
 /**
