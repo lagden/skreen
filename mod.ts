@@ -1,10 +1,16 @@
 import { render_html } from "./wasm/skreen.js";
 
+/** Options for {@linkcode skreen}. */
 export interface SkreenOptions {
+	/** HTML string or URL (`http://`, `https://`, `file://`) to render. */
 	data: string;
+	/** Viewport width in logical pixels. Defaults to `1200`. */
 	width?: number;
+	/** Viewport height in logical pixels. Use `0` to expand to content height (max 4000). Defaults to `800`. */
 	height?: number;
+	/** Device-pixel ratio applied to the output bitmap. Defaults to `2.0`. */
 	scale?: number;
+	/** Additional font files to embed (raw bytes). Augments the built-in Inter Regular + Bold. */
 	fonts?: Uint8Array[];
 }
 
@@ -16,6 +22,15 @@ function isUrl(s: string): boolean {
 	);
 }
 
+/**
+ * Renders an HTML document to a PNG image using the WASM-based Blitz/Vello renderer.
+ *
+ * ```ts
+ * import { skreen } from "@tadashi/skreen";
+ * const png = await skreen({ data: "<h1>Hello</h1>" });
+ * await Deno.writeFile("output.png", png);
+ * ```
+ */
 export async function skreen({
 	data,
 	width = 1200,

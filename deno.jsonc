@@ -1,7 +1,9 @@
 {
 	"name": "@tadashi/skreen",
 	"version": "0.1.0",
+	"description": "Render HTML to PNG screenshots using a Rust/WASM renderer powered by Blitz and Vello.",
 	"license": "MIT",
+	"runtime": ["deno", "browser"],
 	"exports": {
 		".": "./mod.ts"
 	},
