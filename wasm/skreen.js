@@ -16,6 +16,23 @@ export function render_html(html, width, height, scale, custom_fonts) {
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
 }
+
+/**
+ * @param {string} html
+ * @param {number} width
+ * @param {number} height
+ * @param {number} scale
+ * @param {Array<any> | null} [custom_fonts]
+ * @returns {Uint8Array}
+ */
+export function render_html_pdf(html, width, height, scale, custom_fonts) {
+    const ptr0 = passStringToWasm0(html, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.render_html_pdf(ptr0, len0, width, height, scale, isLikeNone(custom_fonts) ? 0 : addToExternrefTable0(custom_fonts));
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
