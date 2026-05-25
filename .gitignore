@@ -10,4 +10,4 @@ deno.lock
 node_modules
 
 # IA
-.claude/settings.local*
+.claude/settings.local.json
