@@ -43,11 +43,6 @@ const pdf = await skreenPdf({
 await Deno.writeFile("output.pdf", pdf);
 ```
 
-### With Tailwind CSS
-
-The WASM renderer does not execute JavaScript, so Tailwind CSS must be pre-processed and inlined in the HTML before
-passing it to `skreen`. Use the Tailwind CLI or PostCSS externally to generate the `<style>` block.
-
 ### With custom fonts
 
 Pass additional font files as `Uint8Array` via the `fonts` option. These fonts are registered with the renderer
