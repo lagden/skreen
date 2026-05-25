@@ -1635,6 +1635,7 @@ version = "0.1.0"
 dependencies = [
  "anyrender",
  "anyrender_vello_cpu",
+ "base64",
  "blitz-dom",
  "blitz-html",
  "blitz-paint",
@@ -1645,6 +1646,7 @@ dependencies = [
  "linebender_resource_handle",
  "parley",
  "peniko",
+ "percent-encoding",
  "png 0.18.1",
  "wasm-bindgen",
 ]

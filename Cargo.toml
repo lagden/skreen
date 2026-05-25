@@ -10,6 +10,8 @@ crate-type = ["cdylib"]
 wasm-bindgen = "0.2.120"
 js-sys = "0.3.98"
 png = "0.18.1"
+base64 = "0.22"
+percent-encoding = "2"
 
 blitz-html               = { version = "0.3.0-alpha.2" }
 blitz-dom                = { version = "0.3.0-alpha.2", default-features = false, features = ["svg", "woff"] }

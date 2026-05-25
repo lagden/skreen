@@ -1,3 +1,4 @@
+import process from "node:process";
 import { render_html, render_html_pdf } from "./wasm/skreen.js";
 
 /** Options for {@linkcode skreen}. */
@@ -96,7 +97,8 @@ export async function withTailwind(html: string): Promise<string> {
 	// preventing Tailwind v4's automatic source detection from hanging on large repos
 	const cssInput = `@import "tailwindcss";\n@source inline("${unique}");`;
 	const result = await postcss([tailwindcss()]).process(cssInput, {
-		from: new URL(".", import.meta.url).pathname + "virtual.css",
+		// from: new URL(".", import.meta.url).pathname + "virtual.css",
+		from: `${process.cwd()}/virtual.css`,
 	});
 
 	const style = `<style>${result.css}</style>`;

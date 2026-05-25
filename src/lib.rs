@@ -1,20 +1,59 @@
 use anyrender::{PaintScene as _, render_to_buffer};
 use anyrender_vello_cpu::VelloCpuImageRenderer;
+use base64::{Engine as _, engine::general_purpose};
 use blitz_dom::{DocumentConfig, FontContext};
 use blitz_html::HtmlDocument;
 use blitz_paint::paint_scene;
+use blitz_traits::net::{Bytes, NetHandler, NetProvider, Request};
 use blitz_traits::shell::{ColorScheme, Viewport};
 use kurbo::Rect;
 use linebender_resource_handle::Blob;
 use parley::fontique::{Collection, CollectionOptions, GenericFamily};
 use peniko::{Color, Fill};
+use percent_encoding::percent_decode;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
-use js_sys;
 
 // Fonts are compiled into the WASM binary at build time; no filesystem access at runtime.
 const FONT_REGULAR: &[u8] = include_bytes!("../fonts/Inter-Regular.ttf");
 const FONT_BOLD: &[u8] = include_bytes!("../fonts/Inter-Bold.ttf");
+
+/// A [`NetProvider`] that resolves `data:` URIs synchronously.
+///
+/// All other URL schemes are silently dropped (no network access in WASM).
+/// Without this, `<img src="data:...">` elements render as blank boxes because
+/// the default `DummyNetProvider` ignores every fetch request.
+struct DataUriNetProvider;
+
+impl NetProvider for DataUriNetProvider {
+    fn fetch(&self, _doc_id: usize, request: Request, handler: Box<dyn NetHandler>) {
+        let url = request.url;
+        if url.scheme() != "data" {
+            return;
+        }
+
+        // data:[<mediatype>][;base64],<data>
+        let url_str = url.as_str();
+        let rest = &url_str["data:".len()..];
+
+        let Some(comma) = rest.find(',') else { return };
+        let header = &rest[..comma];
+        let payload = &rest[comma + 1..];
+
+        let bytes: Bytes = if header.ends_with(";base64") {
+            match general_purpose::STANDARD.decode(payload)
+                .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(payload))
+            {
+                Ok(decoded) => Bytes::from(decoded),
+                Err(_) => return,
+            }
+        } else {
+            Bytes::from(percent_decode(payload.as_bytes()).collect::<Vec<u8>>())
+        };
+
+        handler.bytes(url_str.to_string(), bytes);
+    }
+}
 
 /// Builds a [`FontContext`] with the embedded Inter typeface and any caller-supplied fonts.
 ///
@@ -106,7 +145,7 @@ pub fn render_html(
 	let extra_fonts: Vec<Vec<u8>> = custom_fonts
 		.map(|arr| {
 			arr.iter()
-				.filter_map(|v| js_sys::Uint8Array::try_from(v).ok().map(|u| u.to_vec()))
+				.map(|v| js_sys::Uint8Array::from(v).to_vec())
 				.collect()
 		})
 		.unwrap_or_default();
@@ -122,6 +161,7 @@ pub fn render_html(
 				ColorScheme::Light,
 			)),
 			font_ctx: Some(make_font_ctx(&extra_fonts)),
+			net_provider: Some(Arc::new(DataUriNetProvider)),
 			..Default::default()
 		},
 	);
@@ -186,7 +226,7 @@ pub fn render_html_pdf(
 	let extra_fonts: Vec<Vec<u8>> = custom_fonts
 		.map(|arr| {
 			arr.iter()
-				.filter_map(|v| js_sys::Uint8Array::try_from(v).ok().map(|u| u.to_vec()))
+				.map(|v| js_sys::Uint8Array::from(v).to_vec())
 				.collect()
 		})
 		.unwrap_or_default();
@@ -202,6 +242,7 @@ pub fn render_html_pdf(
 				ColorScheme::Light,
 			)),
 			font_ctx: Some(make_font_ctx(&extra_fonts)),
+			net_provider: Some(Arc::new(DataUriNetProvider)),
 			..Default::default()
 		},
 	);
