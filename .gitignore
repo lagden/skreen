@@ -8,3 +8,6 @@ deno.lock
 .DS_Store
 
 node_modules
+
+# IA
+.claude/settings.local*
