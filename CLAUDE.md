@@ -5,7 +5,7 @@
 **Architecture:**
 
 - `src/lib.rs` — Rust/WASM core: parses HTML with Blitz, renders via `anyrender_vello_cpu`, encodes PNG
-- `mod.ts` — Deno/TypeScript public API: wraps WASM, handles URL fetching, exposes `skreen()` and `withTailwind()`
+- `mod.ts` — Deno/TypeScript public API: wraps WASM, handles URL fetching, exposes `skreen()` and `skreenPdf()`
 - `wasm/` — Generated WASM bindings (output of `deno task build`; do not edit manually)
 - `build.ts` — Build script: runs `cargo build --target wasm32-unknown-unknown --release` then
   `wasm-bindgen --target deno`
@@ -16,7 +16,7 @@
 - Color scheme is fixed to `Light`; there is no dark mode support in the renderer
 - Height is capped at 4000 logical pixels (enforced in `render_html()`)
 - `height=0` is valid: the renderer expands to fit document content
-- The WASM renderer does not execute JavaScript — Tailwind CDN builds must be pre-processed via `withTailwind()`
+- The WASM renderer does not execute JavaScript — Tailwind CSS must be pre-processed and inlined before rendering
 - Fonts are embedded at compile time; no system fonts are loaded
 
 ## Prerequisites
@@ -53,12 +53,12 @@ cargo install wasm-bindgen-cli
 
 ## Key Files
 
-| File                 | Purpose                                                          |
-| -------------------- | ---------------------------------------------------------------- |
-| `src/lib.rs`         | WASM entry point — `render_html()` is the sole exported function |
-| `mod.ts`             | Public TS API — `skreen()` and `withTailwind()`                  |
-| `mod_test.ts`        | Deno integration tests (run against built WASM)                  |
-| `build.ts`           | Build pipeline script                                            |
-| `deno.jsonc`         | Deno config, tasks, imports, fmt/lint rules                      |
-| `Cargo.toml`         | Rust crate config and dependencies                               |
-| `example/receipt.ts` | End-to-end example using `withTailwind`                          |
+| File          | Purpose                                                          |
+| ------------- | ---------------------------------------------------------------- |
+| `src/lib.rs`  | WASM entry point — `render_html()` is the sole exported function |
+| `mod.ts`      | Public TS API — `skreen()` and `skreenPdf()`                     |
+| `mod_test.ts` | Deno integration tests (run against built WASM)                  |
+| `build.ts`    | Build pipeline script                                            |
+| `deno.jsonc`  | Deno config, tasks, imports, fmt/lint rules                      |
+| `Cargo.toml`  | Rust crate config and dependencies                               |
+| `example/`    | End-to-end usage examples                                        |

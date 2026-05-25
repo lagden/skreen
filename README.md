@@ -45,22 +45,8 @@ await Deno.writeFile("output.pdf", pdf);
 
 ### With Tailwind CSS
 
-Use `withTailwind` to pre-process HTML that uses Tailwind CSS v4 utility classes before passing it to the renderer. The
-WASM renderer does not execute JavaScript, so the browser CDN build cannot generate styles at runtime — this helper
-inlines only the CSS classes actually used in the markup.
-
-```ts
-import { skreen, withTailwind } from "jsr:@tadashi/skreen";
-import { html } from "./template.ts";
-
-const processed = await withTailwind(html);
-const png = await skreen({ data: processed, width: 320, height: 0, scale: 2 });
-
-await Deno.writeFile("receipt.png", png);
-```
-
-> **Note:** `withTailwind` requires the Deno permissions `--allow-read`, `--allow-write`, `--allow-env`, and
-> `--allow-net` (first run only, to cache npm packages).
+The WASM renderer does not execute JavaScript, so Tailwind CSS must be pre-processed and inlined in the HTML before
+passing it to `skreen`. Use the Tailwind CLI or PostCSS externally to generate the `<style>` block.
 
 ### With custom fonts
 
@@ -68,21 +54,20 @@ Pass additional font files as `Uint8Array` via the `fonts` option. These fonts a
 alongside the built-in Inter typeface and can be referenced by `font-family` in the HTML/CSS.
 
 ```ts
-import { skreen, withTailwind } from "jsr:@tadashi/skreen";
-import { html } from "./template.ts";
+import { skreen } from "jsr:@tadashi/skreen";
+import { html } from "./template.ts"; // HTML with pre-processed CSS
 
 const roboto = await Deno.readFile("./Roboto-VariableFont.ttf");
 
-const processed = await withTailwind(html);
 const png = await skreen({
-	data: processed,
+	data: html,
 	width: 320,
 	height: 0,
 	scale: 2,
 	fonts: [roboto],
 });
 
-await Deno.writeFile("receipt.png", png);
+await Deno.writeFile("screenshot.png", png);
 ```
 
 See the full working examples in [example/basic/](example/basic/), [example/basic-pdf/](example/basic-pdf/), and
@@ -98,7 +83,7 @@ Returns a PNG image as a `Uint8Array`.
 | -------- | -------------- | ------- | ------------------------------------------------------------------------- |
 | `data`   | `string`       | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string. |
 | `width`  | `number`       | `1200`  | Viewport width in logical pixels.                                         |
-| `height` | `number`       | `800`   | Minimum viewport height in logical pixels.                                |
+| `height` | `number`       | `800`   | Minimum viewport height in logical pixels. Use `0` to expand to content.  |
 | `scale`  | `number`       | `2.0`   | Device pixel ratio. Use `2.0` for HiDPI/retina output.                    |
 | `fonts`  | `Uint8Array[]` | —       | Additional font files (TTF/OTF) registered alongside the built-in Inter.  |
 
@@ -119,17 +104,6 @@ Returns a PDF file as a `Uint8Array`. Accepts the same options as `skreen`.
 
 The PDF page size is derived from the CSS viewport dimensions (`width` × computed height), so the document scales
 correctly at any `scale` value. The rendered bitmap is embedded as an image covering the full page.
-
-### `withTailwind(html): Promise<string>`
-
-Pre-processes an HTML string with Tailwind CSS v4, replacing the `@tailwindcss/browser` CDN script tag (or injecting
-before `</head>`) with a `<style>` block containing only the CSS classes actually used in the markup.
-
-| Parameter | Type     | Description                                      |
-| --------- | -------- | ------------------------------------------------ |
-| `html`    | `string` | **Required.** HTML string with Tailwind classes. |
-
-Returns the HTML string with an inlined `<style>` block ready to be passed to `skreen`.
 
 ## Building from source
 

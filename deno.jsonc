@@ -1,6 +1,6 @@
 {
 	"name": "@tadashi/skreen",
-	"version": "0.1.0",
+	"version": "2.0.0",
 	"description": "Render HTML to PNG screenshots using a Rust/WASM renderer powered by Blitz and Vello.",
 	"license": "MIT",
 	"runtime": ["deno", "browser"],
@@ -14,10 +14,7 @@
 	},
 	"nodeModulesDir": "auto",
 	"imports": {
-		"@std/assert": "jsr:@std/assert@1.0.19",
-		"postcss": "npm:postcss@8.5.12",
-		"tailwindcss": "npm:tailwindcss@4.2.4",
-		"@tailwindcss/postcss": "npm:@tailwindcss/postcss@4.2.4"
+		"@std/assert": "jsr:@std/assert@1.0.19"
 	},
 	"fmt": {
 		"useTabs": true,

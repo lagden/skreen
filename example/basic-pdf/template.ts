@@ -682,7 +682,7 @@ export const html = `<!DOCTYPE html>
 </style></head>
 <body>
 	<main data-theme="corporate">
-		<div class="navbar gap-8 bg-neutral text-neutral-content mb-8">
+		<div class="navbar gap-8 bg-neutral text-neutral-content mb-8" style="background-color: #1d1d2b; color: #ebebf5">
 			<div class="flex-none">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" width="64" height="38" viewBox="0 0 103 62" class="m-4">
 					<path fill="#45ac5d" d="M88.791 38.332q-4.035 0-7.184-1.723-3.15-1.77-4.97-4.822-1.82-3.05-1.82-6.938 0-3.936 1.82-6.938 1.82-3.051 4.97-4.773t7.184-1.722q4.084 0 7.234 1.722 3.198 1.722 4.969 4.724 1.821 3 1.821 6.987 0 3.887-1.821 6.938-1.77 3.05-4.97 4.822-3.148 1.722-7.233 1.722m0-5.266q2.264 0 4.035-.984t2.756-2.854q1.033-1.87 1.033-4.379 0-2.559-1.033-4.38-.984-1.869-2.756-2.853t-3.986-.984q-2.263 0-4.035.984-1.722.984-2.755 2.854-1.033 1.82-1.033 4.379 0 2.51 1.033 4.38 1.033 1.869 2.755 2.853 1.772.984 3.986.984M61.788 11.416q3.15 0 5.61 1.23 2.509 1.23 3.936 3.789 1.427 2.51 1.427 6.495v15.057h-6.15v-14.27q0-3.493-1.674-5.216-1.623-1.722-4.576-1.722-2.165 0-3.838.886-1.674.885-2.608 2.657-.886 1.722-.886 4.38v13.285h-6.15V11.711h5.855v7.086l-1.033-2.165q1.377-2.51 3.985-3.839 2.658-1.377 6.102-1.377M36.591 37.987V11.711h6.151v26.276zm3.1-30.606q-1.723 0-2.854-1.083a3.56 3.56 0 0 1-1.082-2.608q0-1.575 1.082-2.607Q37.97 0 39.691 0t2.805 1.033q1.132.984 1.132 2.51 0 1.623-1.083 2.755-1.082 1.083-2.854 1.083M20.412 37.987V11.711h5.856v7.233l-.69-2.116q1.182-2.657 3.691-4.034 2.559-1.378 6.348-1.378v5.855a3 3 0 0 0-.738-.098q-.345-.05-.69-.05-3.493 0-5.56 2.067-2.066 2.018-2.066 6.053v12.744z" />
@@ -704,23 +704,23 @@ export const html = `<!DOCTYPE html>
 				<table class="table table-xs table-fixed">
 					<tbody>
 						<tr>
-							<td>Razão Social:</td>
+							<td style="width: 200px">Razão Social:</td>
 							<td>Prefeitura Municipal de São Paulo</td>
 						</tr>
 						<tr>
-							<td>CNPJ:</td>
+							<td style="width: 200px">CNPJ:</td>
 							<td>46.395.000/0001-39</td>
 						</tr>
 						<tr>
-							<td>Endereço:</td>
+							<td style="width: 200px">Endereço:</td>
 							<td>Viaduto do Chá, 15 - Centro Histórico, São Paulo - SP, 01002-020</td>
 						</tr>
 						<tr>
-							<td>Telefone:</td>
+							<td style="width: 200px">Telefone:</td>
 							<td>(11) 3113-9000</td>
 						</tr>
 						<tr>
-							<td>E-mail:</td>
+							<td style="width: 200px">E-mail:</td>
 							<td>contato@prefeitura.sp.gov.br</td>
 						</tr>
 					</tbody>
@@ -731,23 +731,23 @@ export const html = `<!DOCTYPE html>
 				<table class="table table-xs table-fixed">
 					<tbody>
 						<tr>
-							<td>Nome Completo:</td>
+							<td style="width: 200px">Nome Completo:</td>
 							<td>João Silva Santos</td>
 						</tr>
 						<tr>
-							<td>CPF:</td>
+							<td style="width: 200px">CPF:</td>
 							<td>123.456.789-00</td>
 						</tr>
 						<tr>
-							<td>Cargo:</td>
+							<td style="width: 200px">Cargo:</td>
 							<td>Auxiliar Administrativo</td>
 						</tr>
 						<tr>
-							<td>Matrícula:</td>
+							<td style="width: 200px">Matrícula:</td>
 							<td>SP2024001234</td>
 						</tr>
 						<tr>
-							<td>Data de Admissão:</td>
+							<td style="width: 200px">Data de Admissão:</td>
 							<td>01/03/2024</td>
 						</tr>
 					</tbody>
@@ -758,19 +758,19 @@ export const html = `<!DOCTYPE html>
 				<table class="table table-xs table-fixed">
 					<tbody>
 						<tr>
-							<td>Valor do Adiantamento:</td>
+							<td style="width: 200px">Valor do Adiantamento:</td>
 							<td>R$ 1.500,00</td>
 						</tr>
 						<tr>
-							<td>Data da Solicitação:</td>
+							<td style="width: 200px">Data da Solicitação:</td>
 							<td>25/05/2026</td>
 						</tr>
 						<tr>
-							<td>Data de Liberação:</td>
+							<td style="width: 200px">Data de Liberação:</td>
 							<td>26/05/2026</td>
 						</tr>
 						<tr>
-							<td>Conta para Depósito:</td>
+							<td style="width: 200px">Conta para Depósito:</td>
 							<td>Banco Trino - Ag: 0001 - CC: 123456-7</td>
 						</tr>
 					</tbody>
@@ -807,7 +807,7 @@ export const html = `<!DOCTYPE html>
 				</div>
 			</section>
 		</div>
-		<footer class="bg-neutral text-neutral-content p-4 mt-8 text-center">
+		<footer class="bg-neutral text-neutral-content p-4 mt-8 text-center" style="background-color: #1d1d2b; color: #ebebf5">
 			<p class="text-sm font-medium">Trino - Soluções Financeiras Digitais | trinopagamentos.com </p>
 		</footer>
 	</main>
