@@ -78,11 +78,13 @@ export async function skreenPdf({
  * Requires: `--allow-read`, `--allow-write`, `--allow-env`, `--allow-net` (first run only, to cache npm packages)
  */
 export async function withTailwind(html: string): Promise<string> {
-	const [{ default: postcss }, { default: tailwindcss }] = await Promise.all([
-		import("postcss"),
-		import("@tailwindcss/postcss"),
-		import("tailwindcss"), // ensures Deno/JSR exposes tailwindcss as a direct dep for consumers
-	] as const);
+	const [{ default: postcss }, { default: tailwindcss }] = await Promise.all(
+		[
+			import("postcss"),
+			import("@tailwindcss/postcss"),
+			import("tailwindcss"), // ensures Deno/JSR exposes tailwindcss as a direct dep for consumers
+		] as const,
+	);
 
 	// Extract unique class names from the HTML to avoid filesystem scanning
 	const classes = [...html.matchAll(/class="([^"]+)"/g)]
