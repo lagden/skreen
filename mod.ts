@@ -72,8 +72,8 @@ export async function skreenPdf({
  * `<style>` block that contains only the CSS classes actually used in the markup.
  *
  * The WASM renderer does not execute JavaScript, so the browser CDN build cannot
- * generate styles at runtime. This helper uses PostCSS + @tailwindcss/postcss on
- * the host and inlines the result before the HTML reaches the renderer.
+ * generate styles at runtime. This helper uses PostCSS + Tailwind CSS v4 on the
+ * host and inlines the result before the HTML reaches the renderer.
  *
  * Requires: `--allow-read`, `--allow-write`, `--allow-env`, `--allow-net` (first run only, to cache npm packages)
  */
@@ -81,7 +81,8 @@ export async function withTailwind(html: string): Promise<string> {
 	const [{ default: postcss }, { default: tailwindcss }] = await Promise.all([
 		import("postcss"),
 		import("@tailwindcss/postcss"),
-	]);
+		import("tailwindcss"), // ensures Deno/JSR exposes tailwindcss as a direct dep for consumers
+	] as const);
 
 	// Extract unique class names from the HTML to avoid filesystem scanning
 	const classes = [...html.matchAll(/class="([^"]+)"/g)]
