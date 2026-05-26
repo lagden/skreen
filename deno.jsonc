@@ -10,9 +10,7 @@
 	"publish": {
 		"include": [
 			"mod.ts",
-			"wasm/skreen.js",
-			"wasm/skreen.d.ts",
-			"wasm/skreen_bg.wasm.d.ts",
+			"wasm/",
 			"README.md"
 		]
 	},

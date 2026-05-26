@@ -23,3 +23,9 @@ anyrender           = "0.10"
 anyrender_vello_cpu = "0.12"
 peniko = "0.6"
 kurbo = "0.13"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
