@@ -1,5 +1,8 @@
 import { createRequire } from "node:module";
 import { render_html } from "./wasm/skreen.js";
+// Static import so Deno tracks @fulgur-rs/cli as a dependency and installs it (with platform
+// binaries) in node_modules. Uses package.json to avoid executing any binary entry point.
+import "npm:@fulgur-rs/cli@0.16.0/package.json" with { type: "json" };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -80,7 +83,10 @@ function resolveBinaryPath(): string {
 		bin = "fulgur.exe";
 	} else throw new Error(`skreenPdf: unsupported platform ${os}/${arch}`);
 
-	const require = createRequire(import.meta.url);
+	// createRequire only accepts file:// URLs or absolute paths; JSR remote URLs are rejected.
+	// When loaded via JSR, import.meta.url is https://jsr.io/... so we fall back to cwd.
+	const anchor = import.meta.url.startsWith("file://") ? import.meta.url : `file://${Deno.cwd()}/`;
+	const require = createRequire(anchor);
 	try {
 		const cliPkgJson: string = require.resolve("@fulgur-rs/cli/package.json");
 		const cliRequire = createRequire(`file://${cliPkgJson}`);
