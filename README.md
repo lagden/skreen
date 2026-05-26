@@ -27,8 +27,11 @@ await Deno.writeFile("screenshot.png", png);
 
 ### As PDF
 
-Use `skreenPdf` to produce a multi-page PDF with **selectable text**. It uses a native Rust binary
-([fulgur](https://github.com/fulgur-rs/fulgur)) and requires the `--allow-run` Deno permission.
+Use `skreenPdf` to produce a multi-page PDF with **selectable text**. It uses
+[`@fulgur-rs/cli`](https://www.npmjs.com/package/@fulgur-rs/cli) (installed automatically as an npm dependency) and
+requires the `--allow-run` Deno permission.
+
+Add `"nodeModulesDir": "auto"` to your `deno.jsonc` so Deno installs the platform-specific binary.
 
 Images embedded as `data:` URIs (`<img src="data:image/png;base64,...">`) are supported.
 
@@ -108,24 +111,21 @@ Returns a PDF file as a `Uint8Array`. Uses a native binary — requires `--allow
 | `author`   | `string` | —       | Document author written into PDF metadata.                                |
 
 The PDF contains real, selectable text and supports automatic multi-page layout via CSS pagination. Supported platforms:
-macOS (Apple Silicon and Intel) and Linux (x86\_64 and ARM64). The correct binary is selected automatically at runtime.
+macOS (Apple Silicon and Intel), Linux (x86\_64, ARM64, and musl), and Windows (x86\_64). The correct binary is selected
+automatically at runtime via the `@fulgur-rs/cli` npm package.
 
 ## Building from source
 
-Prerequisites: Rust, `wasm-bindgen-cli`, Deno, and (for Linux cross-compilation) `cargo-zigbuild` + `zig`.
+Prerequisites: Rust, `wasm-bindgen-cli`, and Deno.
 
 ```sh
-# Add the required Rust targets (once)
+# Add the required Rust target (once)
 rustup target add wasm32-unknown-unknown
-rustup target add x86_64-apple-darwin
-rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
 
-# Install tooling (once)
+# Install wasm-bindgen-cli (once)
 cargo install wasm-bindgen-cli
-cargo install cargo-zigbuild
-brew install zig  # macOS
 
-# Compile WASM bindings + all native PDF binaries
+# Compile WASM bindings
 deno task build
 
 # Run tests

@@ -1,4 +1,7 @@
+import { createRequire } from "node:module";
 import { render_html } from "./wasm/skreen.js";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 /** Options for {@linkcode skreen}. */
 export interface SkreenOptions {
@@ -28,24 +31,69 @@ export interface SkreenPdfOptions {
 	author?: string;
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function isUrl(s: string): boolean {
-	return (
-		s.startsWith("http://") ||
-		s.startsWith("https://") ||
-		s.startsWith("file://")
-	);
+	return s.startsWith("http://") || s.startsWith("https://") || s.startsWith("file://");
 }
 
+/**
+ * Detects musl libc on Linux by scanning the process memory map.
+ * Falls back to false (glibc) on any read error (non-Linux, permission denied, etc.).
+ */
+function isMusl(): boolean {
+	try {
+		return Deno.readTextFileSync("/proc/self/maps").includes("musl");
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Resolves the absolute path to the platform-specific `fulgur` binary.
+ *
+ * `@fulgur-rs/cli` distributes the native binary via npm optionalDependencies
+ * (`@fulgur-rs/cli-darwin-arm64`, etc.). Deno's scoped node_modules layout
+ * nests those optional deps under the parent package's own `node_modules/`,
+ * not at the root. We therefore resolve in two steps:
+ *   1. Find `@fulgur-rs/cli` from the root context.
+ *   2. Create a new `require` anchored at that package to reach the platform dep.
+ */
 function resolveBinaryPath(): string {
 	const { os, arch } = Deno.build;
-	let suffix: string;
-	if (os === "darwin" && arch === "aarch64") suffix = "aarch64-apple-darwin";
-	else if (os === "darwin" && arch === "x86_64") suffix = "x86_64-apple-darwin";
-	else if (os === "linux" && arch === "x86_64") suffix = "x86_64-unknown-linux-gnu";
-	else if (os === "linux" && arch === "aarch64") suffix = "aarch64-unknown-linux-gnu";
-	else throw new Error(`skreenPdf: unsupported platform ${os}/${arch}`);
-	return new URL(`./bin/skreen_pdf-${suffix}`, import.meta.url).pathname;
+	let pkg: string;
+	let bin: string;
+	if (os === "darwin" && arch === "aarch64") {
+		pkg = "@fulgur-rs/cli-darwin-arm64";
+		bin = "fulgur";
+	} else if (os === "darwin" && arch === "x86_64") {
+		pkg = "@fulgur-rs/cli-darwin-x64";
+		bin = "fulgur";
+	} else if (os === "linux" && arch === "x86_64") {
+		pkg = isMusl() ? "@fulgur-rs/cli-linux-x64-musl" : "@fulgur-rs/cli-linux-x64";
+		bin = "fulgur";
+	} else if (os === "linux" && arch === "aarch64") {
+		pkg = "@fulgur-rs/cli-linux-arm64";
+		bin = "fulgur";
+	} else if (os === "windows" && arch === "x86_64") {
+		pkg = "@fulgur-rs/cli-win32-x64";
+		bin = "fulgur.exe";
+	} else throw new Error(`skreenPdf: unsupported platform ${os}/${arch}`);
+
+	const require = createRequire(import.meta.url);
+	try {
+		const cliPkgJson: string = require.resolve("@fulgur-rs/cli/package.json");
+		const cliRequire = createRequire(`file://${cliPkgJson}`);
+		const platformPkgJson: string = cliRequire.resolve(`${pkg}/package.json`);
+		return platformPkgJson.replace(/[/\\]package\.json$/, `/bin/${bin}`);
+	} catch {
+		throw new Error(
+			`skreenPdf: platform package ${pkg} not installed. Ensure nodeModulesDir is enabled and run 'deno install'.`,
+		);
+	}
 }
+
+// ── Public API ────────────────────────────────────────────────────────────────
 
 /**
  * Renders an HTML document to a PNG image using the WASM-based Blitz/Vello renderer.
@@ -68,10 +116,11 @@ export async function skreen({
 }
 
 /**
- * Renders an HTML document to a selectable-text, multi-page PDF using a native Fulgur renderer.
+ * Renders an HTML document to a selectable-text, multi-page PDF via the
+ * [`@fulgur-rs/cli`](https://www.npmjs.com/package/@fulgur-rs/cli) native binary.
  *
- * Requires `--allow-run` permission for Deno. The binary is resolved automatically based on
- * the current OS and CPU architecture (`aarch64`/`x86_64` on macOS and Linux).
+ * Requires `--allow-run` permission and `nodeModulesDir: "auto"` in `deno.jsonc`
+ * so the platform binary is installed by Deno as an npm optional dependency.
  *
  * ```ts
  * import { skreenPdf } from "@tadashi/skreen";
@@ -90,23 +139,13 @@ export async function skreenPdf({
 
 	const binaryPath = resolveBinaryPath();
 
-	try {
-		await Deno.stat(binaryPath);
-	} catch {
-		throw new Error(
-			`skreen_pdf binary not found at ${binaryPath}. Run 'deno task build' to compile it.`,
-		);
-	}
-
-	const input = JSON.stringify({
-		html,
-		page_size: pageSize,
-		margin_mm: marginMm,
-		...(title !== undefined ? { title } : {}),
-		...(author !== undefined ? { author } : {}),
-	});
+	// fulgur CLI: HTML via stdin, PDF to stdout (-o -)
+	const args = ["render", "--stdin", "-o", "-", "--size", pageSize, "--margin", String(marginMm)];
+	if (title !== undefined) args.push("--title", title);
+	if (author !== undefined) args.push("--author", author);
 
 	const cmd = new Deno.Command(binaryPath, {
+		args,
 		stdin: "piped",
 		stdout: "piped",
 		stderr: "piped",
@@ -114,13 +153,13 @@ export async function skreenPdf({
 	const child = cmd.spawn();
 
 	const writer = child.stdin.getWriter();
-	await writer.write(new TextEncoder().encode(input));
+	await writer.write(new TextEncoder().encode(html));
 	await writer.close();
 
 	const { code, stdout, stderr } = await child.output();
 	if (code !== 0) {
 		const errMsg = new TextDecoder().decode(stderr);
-		throw new Error(`skreen_pdf exited with code ${code}: ${errMsg}`);
+		throw new Error(`fulgur exited with code ${code}: ${errMsg}`);
 	}
 
 	return stdout;

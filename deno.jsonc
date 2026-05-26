@@ -11,7 +11,6 @@
 		"include": [
 			"mod.ts",
 			"wasm/",
-			"bin/",
 			"README.md"
 		]
 	},
@@ -22,6 +21,7 @@
 	},
 	"nodeModulesDir": "auto",
 	"imports": {
+		"@fulgur-rs/cli": "npm:@fulgur-rs/cli@0.16.0",
 		"@std/assert": "jsr:@std/assert@1.0.19"
 	},
 	"fmt": {

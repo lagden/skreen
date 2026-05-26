@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { assert, assertEquals, assertInstanceOf } from "@std/assert";
 import { skreen, skreenPdf } from "./mod.ts";
 
@@ -54,17 +55,11 @@ Deno.test("renders empty body without panic", async () => {
 	assertPng(result);
 });
 
-// PDF tests require the native binary; skip gracefully when it's absent (e.g. non-publish CI).
+// PDF tests require the @fulgur-rs/cli npm package; skip gracefully when absent (e.g. CI without nodeModulesDir).
 function pdfBinaryExists(): boolean {
-	const { os, arch } = Deno.build;
-	let suffix: string;
-	if (os === "darwin" && arch === "aarch64") suffix = "aarch64-apple-darwin";
-	else if (os === "darwin" && arch === "x86_64") suffix = "x86_64-apple-darwin";
-	else if (os === "linux" && arch === "x86_64") suffix = "x86_64-unknown-linux-gnu";
-	else if (os === "linux" && arch === "aarch64") suffix = "aarch64-unknown-linux-gnu";
-	else return false;
 	try {
-		Deno.statSync(new URL(`./bin/skreen_pdf-${suffix}`, import.meta.url).pathname);
+		const require = createRequire(import.meta.url);
+		require.resolve("@fulgur-rs/cli/package.json");
 		return true;
 	} catch {
 		return false;
