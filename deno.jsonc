@@ -10,12 +10,14 @@
 	"publish": {
 		"include": [
 			"mod.ts",
-			"wasm/",
+			"wasm/skreen.js",
+			"wasm/skreen.d.ts",
+			"wasm/skreen_bg.wasm.d.ts",
 			"README.md"
 		]
 	},
 	"tasks": {
-		"build": "deno run --allow-run --allow-write --allow-read --allow-ffi build.ts",
+		"build": "deno run --allow-run --allow-write --allow-read --allow-ffi --allow-env build.ts",
 		"test": "deno test --allow-read --allow-ffi --allow-net --allow-run mod_test.ts",
 		"fmt:chk": "deno fmt --check"
 	},
