@@ -43,10 +43,10 @@ console.log("\nWASM build complete → ./wasm/");
 //   cargo install cargo-zigbuild
 //   brew install zig   (or system zig)
 
-// Targets: [rust-target, toolchain]
+// All targets use cargo-zigbuild for consistent cross-compilation on any host.
 const TARGETS: [string, "cargo" | "zigbuild"][] = [
-	["aarch64-apple-darwin", "cargo"],
-	["x86_64-apple-darwin", "cargo"],
+	["aarch64-apple-darwin", "zigbuild"],
+	["x86_64-apple-darwin", "zigbuild"],
 	["x86_64-unknown-linux-gnu", "zigbuild"],
 	["aarch64-unknown-linux-gnu", "zigbuild"],
 ];

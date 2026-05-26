@@ -12,7 +12,7 @@ jobs:
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -20,8 +20,34 @@ jobs:
           deno-version: lts
           cache: true
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: >-
+            wasm32-unknown-unknown,
+            aarch64-apple-darwin,
+            x86_64-apple-darwin,
+            x86_64-unknown-linux-gnu,
+            aarch64-unknown-linux-gnu
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> target
+            pdf-bin -> target
+
+      - name: Install cargo tools
+        run: cargo install wasm-bindgen-cli cargo-zigbuild
+
       - name: Install
         run: deno install
+
+      - name: Build
+        run: deno task build
 
       - name: Format
         run: deno task fmt:chk

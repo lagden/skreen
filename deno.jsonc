@@ -7,6 +7,14 @@
 	"exports": {
 		".": "./mod.ts"
 	},
+	"publish": {
+		"include": [
+			"mod.ts",
+			"wasm/",
+			"bin/",
+			"README.md"
+		]
+	},
 	"tasks": {
 		"build": "deno run --allow-run --allow-write --allow-read --allow-ffi build.ts",
 		"test": "deno test --allow-read --allow-ffi --allow-net --allow-run mod_test.ts",
