@@ -189,7 +189,7 @@ pub fn render_html(
 				None,
 				&Rect::new(0.0, 0.0, rw as f64, rh as f64),
 			);
-			paint_scene(scene, document.as_ref(), scale_f64, rw, rh, 0, 0);
+			paint_scene(scene, document.as_mut(), scale_f64, rw, rh, 0, 0);
 		},
 		rw,
 		rh,

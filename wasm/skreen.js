@@ -31,22 +31,22 @@ export function render_html(html, width, height, scale, custom_fonts) {
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_throw_9c31b086c2b26051: function(arg0, arg1) {
+        __wbg___wbindgen_throw_1506f2235d1bdba0: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_get_unchecked_1dfe6d05ad91d9b7: function(arg0, arg1) {
+        __wbg_get_unchecked_33f6e5c9e2f2d6b2: function(arg0, arg1) {
             const ret = arg0[arg1 >>> 0];
             return ret;
         },
-        __wbg_length_2591a0f4f659a55c: function(arg0) {
+        __wbg_length_4a591ecaa01354d9: function(arg0) {
             const ret = arg0.length;
             return ret;
         },
-        __wbg_length_56fcd3e2b7e0299d: function(arg0) {
+        __wbg_length_66f1a4b2e9026940: function(arg0) {
             const ret = arg0.length;
             return ret;
         },
-        __wbg_prototypesetcall_5f9bdc8d75e07276: function(arg0, arg1, arg2) {
+        __wbg_prototypesetcall_3249fc62a0fafa30: function(arg0, arg1, arg2) {
             Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), arg2);
         },
         __wbindgen_init_externref_table: function() {
