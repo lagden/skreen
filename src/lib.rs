@@ -189,97 +189,13 @@ pub fn render_html(
 				None,
 				&Rect::new(0.0, 0.0, rw as f64, rh as f64),
 			);
-			paint_scene(scene, document.as_ref(), scale_f64, rw, rh, 0, 0);
+			paint_scene(scene, document.as_mut(), scale_f64, rw, rh, 0, 0);
 		},
 		rw,
 		rh,
 	);
 
 	encode_png(&buffer, rw, rh)
-}
-
-/// Renders an HTML document to a PDF file and returns the encoded bytes.
-///
-/// Uses the same Blitz + Vello rendering pipeline as [`render_html`], then embeds the
-/// resulting RGBA bitmap into a single-page PDF via [Krilla](https://crates.io/crates/krilla).
-///
-/// # Parameters
-/// - `html`         — Raw HTML string to render.
-/// - `width`        — Viewport width in logical (CSS) pixels; also sets the PDF page width.
-/// - `height`       — Minimum viewport height in logical pixels. Pass `0` to expand to content height.
-/// - `scale`        — Device-pixel ratio applied to the rendered bitmap. The PDF page size is
-///                    derived from the *CSS* dimensions, not the scaled physical pixels, so
-///                    the document prints at the correct physical size regardless of `scale`.
-/// - `custom_fonts` — Optional JS array of `Uint8Array` font files to register alongside Inter.
-///
-/// # Note
-/// The embedded bitmap is raster, so text in the PDF is not searchable or selectable.
-#[wasm_bindgen]
-pub fn render_html_pdf(
-	html: &str,
-	width: u32,
-	height: u32,
-	scale: f32,
-	custom_fonts: Option<js_sys::Array>,
-) -> Vec<u8> {
-	// Deserialize font bytes from the JS side; non-Uint8Array entries are silently dropped.
-	let extra_fonts: Vec<Vec<u8>> = custom_fonts
-		.map(|arr| {
-			arr.iter()
-				.map(|v| js_sys::Uint8Array::from(v).to_vec())
-				.collect()
-		})
-		.unwrap_or_default();
-
-	// Parse HTML and apply CSS layout at the scaled physical resolution.
-	let mut document = HtmlDocument::from_html(
-		html,
-		DocumentConfig {
-			viewport: Some(Viewport::new(
-				(width as f32 * scale) as u32,
-				(height as f32 * scale) as u32,
-				scale,
-				ColorScheme::Light,
-			)),
-			font_ctx: Some(make_font_ctx(&extra_fonts)),
-			net_provider: Some(Arc::new(DataUriNetProvider)),
-			..Default::default()
-		},
-	);
-
-	// Resolve layout (0.0 = no scroll offset).
-	document.as_mut().resolve(0.0);
-
-	// Compute physical render dimensions.
-	// Height expands to content but is capped at 4 000 logical px to prevent runaway allocations.
-	let computed_height = document.as_ref().root_element().final_layout.size.height;
-	let scale_f64 = scale as f64;
-	let rw = (width as f64 * scale_f64) as u32;
-	let rh = ((computed_height as f64)
-		.max(height as f64)
-		.min(4000.0) * scale_f64) as u32;
-
-	// Render the scene to a raw RGBA pixel buffer via the Vello CPU backend.
-	let buffer = render_to_buffer::<VelloCpuImageRenderer, _>(
-		|scene| {
-			// Fill the background with white before painting the document.
-			scene.fill(
-				Fill::NonZero,
-				Default::default(),
-				Color::WHITE,
-				None,
-				&Rect::new(0.0, 0.0, rw as f64, rh as f64),
-			);
-			paint_scene(scene, document.as_ref(), scale_f64, rw, rh, 0, 0);
-		},
-		rw,
-		rh,
-	);
-
-	// Derive the PDF page height from the un-scaled CSS pixels so the page size is
-	// independent of `scale` (a 2× bitmap should not produce a 2× larger page).
-	let css_h = (rh as f32 / scale) as u32;
-	encode_pdf(buffer, rw, rh, width, css_h)
 }
 
 /// Encodes a raw RGBA pixel buffer as a PNG file.
@@ -294,33 +210,4 @@ fn encode_png(buffer: &[u8], width: u32, height: u32) -> Vec<u8> {
 	writer.write_image_data(buffer).unwrap();
 	writer.finish().unwrap();
 	out
-}
-
-/// Wraps a raw RGBA pixel buffer in a single-page PDF using Krilla.
-///
-/// `render_width` / `render_height` are the physical pixel dimensions of `buffer`.
-/// `css_width` / `css_height` are the logical CSS pixel dimensions used to set the PDF
-/// page size: 1 CSS px = 0.75 PDF points (72 pt/inch ÷ 96 px/inch).
-/// The bitmap is scaled to fill the page exactly.
-fn encode_pdf(buffer: Vec<u8>, render_width: u32, render_height: u32, css_width: u32, css_height: u32) -> Vec<u8> {
-	// PDF coordinate space uses points: 72 pt = 1 inch, 96 px = 1 inch → 1 px = 0.75 pt.
-	let page_w = css_width as f32 * 72.0 / 96.0;
-	let page_h = css_height as f32 * 72.0 / 96.0;
-
-	let mut doc = krilla::Document::new();
-
-	// Create a page with the correct CSS-derived dimensions.
-	let settings = krilla::page::PageSettings::from_wh(page_w, page_h).unwrap();
-	let mut page = doc.start_page_with(settings);
-	let mut surface = page.surface();
-
-	// Embed the high-resolution RGBA bitmap and stretch it to fill the page.
-	let image = krilla::image::Image::from_rgba8(buffer, render_width, render_height);
-	let size = krilla::geom::Size::from_wh(page_w, page_h).unwrap();
-	surface.draw_image(image, size);
-
-	// surface and page must be dropped before doc.finish() to flush pending state.
-	drop(surface);
-	drop(page);
-	doc.finish().unwrap()
 }

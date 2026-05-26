@@ -12,7 +12,7 @@ jobs:
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -20,8 +20,46 @@ jobs:
           deno-version: lts
           cache: true
 
+      - name: Setup Rust
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: >-
+            wasm32-unknown-unknown,
+            aarch64-apple-darwin,
+            x86_64-apple-darwin,
+            x86_64-unknown-linux-gnu,
+            aarch64-unknown-linux-gnu
+
+      - name: Setup Zig
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: mlugg/setup-zig@v2
+
+      - name: Cache Rust
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> target
+            pdf-bin -> target
+
+      - name: Install cargo-binstall
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo tools
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          WASM_BINDGEN_VERSION=$(awk '/^name = "wasm-bindgen"$/{f=1} f && /^version/{gsub(/"/, "", $3); print $3; exit}' Cargo.lock)
+          echo "Installing wasm-bindgen-cli@${WASM_BINDGEN_VERSION}"
+          cargo binstall --no-confirm "wasm-bindgen-cli@${WASM_BINDGEN_VERSION}" cargo-zigbuild
+
       - name: Install
         run: deno install
+
+      - name: Build
+        if: startsWith(github.ref, 'refs/tags/')
+        run: deno task build
 
       - name: Format
         run: deno task fmt:chk

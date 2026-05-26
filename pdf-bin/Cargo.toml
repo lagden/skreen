@@ -1,0 +1,17 @@
+[package]
+name = "skreen_pdf"
+version = "3.0.0"
+edition = "2021"
+
+[[bin]]
+name = "skreen_pdf"
+path = "src/main.rs"
+
+[dependencies]
+fulgur     = "0.16.0"
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64     = "0.22"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

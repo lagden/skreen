@@ -1,6 +1,6 @@
 [package]
 name = "skreen"
-version = "2.0.0"
+version = "3.0.0"
 edition = "2021"
 
 [lib]
@@ -13,14 +13,13 @@ png = "0.18.1"
 base64 = "0.22"
 percent-encoding = "2"
 
-blitz-html               = { version = "0.3.0-alpha.2" }
-blitz-dom                = { version = "0.3.0-alpha.2", default-features = false, features = ["svg", "woff"] }
-blitz-paint              = { version = "0.3.0-alpha.2" }
-blitz-traits             = { version = "0.3.0-alpha.2" }
+blitz-html               = { version = "0.3.0-alpha.4" }
+blitz-dom                = { version = "0.3.0-alpha.4", default-features = false, features = ["svg", "woff"] }
+blitz-paint              = { version = "0.3.0-alpha.4" }
+blitz-traits             = { version = "0.3.0-alpha.4" }
 linebender_resource_handle = "0.1.1"
 parley                   = { version = "0.9", default-features = false, features = ["std"] }
-anyrender           = "0.8"
-anyrender_vello_cpu = "0.10"
+anyrender           = "0.10"
+anyrender_vello_cpu = "0.12"
 peniko = "0.6"
 kurbo = "0.13"
-krilla = "0.7"

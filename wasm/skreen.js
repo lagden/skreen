@@ -28,58 +28,25 @@ export function render_html(html, width, height, scale, custom_fonts) {
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
 }
-
-/**
- * Renders an HTML document to a PDF file and returns the encoded bytes.
- *
- * Uses the same Blitz + Vello rendering pipeline as [`render_html`], then embeds the
- * resulting RGBA bitmap into a single-page PDF via [Krilla](https://crates.io/crates/krilla).
- *
- * # Parameters
- * - `html`         — Raw HTML string to render.
- * - `width`        — Viewport width in logical (CSS) pixels; also sets the PDF page width.
- * - `height`       — Minimum viewport height in logical pixels. Pass `0` to expand to content height.
- * - `scale`        — Device-pixel ratio applied to the rendered bitmap. The PDF page size is
- *                    derived from the *CSS* dimensions, not the scaled physical pixels, so
- *                    the document prints at the correct physical size regardless of `scale`.
- * - `custom_fonts` — Optional JS array of `Uint8Array` font files to register alongside Inter.
- *
- * # Note
- * The embedded bitmap is raster, so text in the PDF is not searchable or selectable.
- * @param {string} html
- * @param {number} width
- * @param {number} height
- * @param {number} scale
- * @param {Array<any> | null} [custom_fonts]
- * @returns {Uint8Array}
- */
-export function render_html_pdf(html, width, height, scale, custom_fonts) {
-    const ptr0 = passStringToWasm0(html, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.render_html_pdf(ptr0, len0, width, height, scale, isLikeNone(custom_fonts) ? 0 : addToExternrefTable0(custom_fonts));
-    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-    return v2;
-}
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_throw_9c31b086c2b26051: function(arg0, arg1) {
+        __wbg___wbindgen_throw_1506f2235d1bdba0: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_get_unchecked_1dfe6d05ad91d9b7: function(arg0, arg1) {
+        __wbg_get_unchecked_33f6e5c9e2f2d6b2: function(arg0, arg1) {
             const ret = arg0[arg1 >>> 0];
             return ret;
         },
-        __wbg_length_2591a0f4f659a55c: function(arg0) {
+        __wbg_length_4a591ecaa01354d9: function(arg0) {
             const ret = arg0.length;
             return ret;
         },
-        __wbg_length_56fcd3e2b7e0299d: function(arg0) {
+        __wbg_length_66f1a4b2e9026940: function(arg0) {
             const ret = arg0.length;
             return ret;
         },
-        __wbg_prototypesetcall_5f9bdc8d75e07276: function(arg0, arg1, arg2) {
+        __wbg_prototypesetcall_3249fc62a0fafa30: function(arg0, arg1, arg2) {
             Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), arg2);
         },
         __wbindgen_init_externref_table: function() {

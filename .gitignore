@@ -1,5 +1,9 @@
 # Rust build output
 /target/
+/pdf-bin/target/
+
+# Native PDF binaries (built by `deno task build`)
+/bin/
 
 # Deno lock file (commit if you want reproducible installs)
 deno.lock
