@@ -66,9 +66,6 @@ function assertPdf(result: Uint8Array): void {
 Deno.test("renders minimal HTML to valid PDF", async () => {
 	const result = await skreenPdf({
 		data: "<html><body><h1>Hello PDF</h1></body></html>",
-		width: 400,
-		height: 300,
-		scale: 1.0,
 	});
 	assertPdf(result);
 });
@@ -82,9 +79,21 @@ Deno.test("renders PDF with default options", async () => {
 Deno.test("renders styled HTML to PDF", async () => {
 	const result = await skreenPdf({
 		data: `<html><head><style>body{background:red}</style></head><body><h1>Styled</h1></body></html>`,
-		width: 200,
-		height: 200,
-		scale: 1.0,
+		pageSize: "A4",
+		marginMm: 15,
 	});
 	assertPdf(result);
+});
+
+Deno.test("renders multi-page PDF", async () => {
+	const items = Array.from(
+		{ length: 60 },
+		(_, i) => `<p>Parágrafo ${i + 1}: conteúdo de teste para forçar quebra de página automática.</p>`,
+	).join("");
+	const result = await skreenPdf({
+		data: `<html><body>${items}</body></html>`,
+		pageSize: "A4",
+	});
+	assertPdf(result);
+	assert(result.length > 1000, "multi-page PDF should be larger");
 });

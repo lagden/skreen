@@ -1,6 +1,6 @@
 # @tadashi/skreen
 
-A Deno/JSR library that renders HTML to a **PNG screenshot** or **PDF** using a Rust/WebAssembly core powered by
+A Deno/JSR library that renders HTML to a **PNG screenshot** or a **selectable-text PDF** using a Rust core powered by
 [Blitz](https://github.com/DioxusLabs/blitz).
 
 The input can be a URL (fetched by the TypeScript layer) or a raw HTML string. The output is a `Uint8Array` containing
@@ -27,21 +27,31 @@ await Deno.writeFile("screenshot.png", png);
 
 ### As PDF
 
-Use `skreenPdf` to produce a PDF instead of a PNG. It accepts the same options and the page dimensions match the
-viewport size in CSS pixels converted to PDF points (72 pt/inch at 96 px/inch).
+Use `skreenPdf` to produce a multi-page PDF with **selectable text**. It uses a native Rust binary
+([fulgur](https://github.com/fulgur-rs/fulgur)) and requires the `--allow-run` Deno permission.
+
+Images embedded as `data:` URIs (`<img src="data:image/png;base64,...">`) are supported.
 
 ```ts
 import { skreenPdf } from "jsr:@tadashi/skreen";
 
 const pdf = await skreenPdf({
 	data: "<html><body><h1>Hello World</h1></body></html>",
-	width: 800,
-	height: 600,
-	scale: 2.0,
+	pageSize: "A4",
+	marginMm: 20,
+	title: "My Document",
+	author: "Thiago",
 });
 
 await Deno.writeFile("output.pdf", pdf);
 ```
+
+Page breaks are controlled by standard CSS (`break-before`, `break-after`, `break-inside`). Long documents paginate
+automatically.
+
+> **Note:** Inline SVGs (including those converted from `data:` URIs) may not render on pages that begin via automatic
+> pagination. Use `break-before: page` on any section containing SVG images to ensure they always start on an explicit
+> new page.
 
 ### With custom fonts
 
@@ -87,31 +97,35 @@ by the rendered document height (capped at 4000 logical pixels).
 
 ### `skreenPdf(options): Promise<Uint8Array>`
 
-Returns a PDF file as a `Uint8Array`. Accepts the same options as `skreen`.
+Returns a PDF file as a `Uint8Array`. Uses a native binary — requires `--allow-run`.
 
-| Option   | Type           | Default | Description                                                               |
-| -------- | -------------- | ------- | ------------------------------------------------------------------------- |
-| `data`   | `string`       | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string. |
-| `width`  | `number`       | `1200`  | Viewport width in logical pixels (also sets the PDF page width).          |
-| `height` | `number`       | `800`   | Minimum viewport height in logical pixels. Use `0` to expand to content.  |
-| `scale`  | `number`       | `2.0`   | Device pixel ratio applied to the rendered bitmap.                        |
-| `fonts`  | `Uint8Array[]` | —       | Additional font files (TTF/OTF) registered alongside the built-in Inter.  |
+| Option     | Type     | Default | Description                                                               |
+| ---------- | -------- | ------- | ------------------------------------------------------------------------- |
+| `data`     | `string` | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string. |
+| `pageSize` | `string` | `"A4"`  | Page size: `"A4"`, `"A3"`, or `"Letter"`.                                 |
+| `marginMm` | `number` | `20`    | Uniform page margin in millimetres.                                       |
+| `title`    | `string` | —       | Document title written into PDF metadata.                                 |
+| `author`   | `string` | —       | Document author written into PDF metadata.                                |
 
-The PDF page size is derived from the CSS viewport dimensions (`width` × computed height), so the document scales
-correctly at any `scale` value. The rendered bitmap is embedded as an image covering the full page.
+The PDF contains real, selectable text and supports automatic multi-page layout via CSS pagination. Supported platforms:
+macOS (Apple Silicon and Intel) and Linux (x86\_64 and ARM64). The correct binary is selected automatically at runtime.
 
 ## Building from source
 
-Prerequisites: Rust, `wasm-bindgen-cli`, and Deno.
+Prerequisites: Rust, `wasm-bindgen-cli`, Deno, and (for Linux cross-compilation) `cargo-zigbuild` + `zig`.
 
 ```sh
-# Add the wasm32 target (once)
+# Add the required Rust targets (once)
 rustup target add wasm32-unknown-unknown
+rustup target add x86_64-apple-darwin
+rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
 
-# Install wasm-bindgen CLI (once)
+# Install tooling (once)
 cargo install wasm-bindgen-cli
+cargo install cargo-zigbuild
+brew install zig  # macOS
 
-# Compile and generate bindings
+# Compile WASM bindings + all native PDF binaries
 deno task build
 
 # Run tests
