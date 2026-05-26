@@ -82,37 +82,53 @@ function assertPdf(result: Uint8Array): void {
 	assert(result.length > 4, "PDF output too small");
 }
 
-Deno.test({ name: "renders minimal HTML to valid PDF", ignore: !hasPdfBinary, async fn() {
-	const result = await skreenPdf({
-		data: "<html><body><h1>Hello PDF</h1></body></html>",
-	});
-	assertPdf(result);
-} });
+Deno.test({
+	name: "renders minimal HTML to valid PDF",
+	ignore: !hasPdfBinary,
+	async fn() {
+		const result = await skreenPdf({
+			data: "<html><body><h1>Hello PDF</h1></body></html>",
+		});
+		assertPdf(result);
+	},
+});
 
-Deno.test({ name: "renders PDF with default options", ignore: !hasPdfBinary, async fn() {
-	const result = await skreenPdf({ data: "<p>Test</p>" });
-	assertPdf(result);
-	assert(result.length > 100);
-} });
+Deno.test({
+	name: "renders PDF with default options",
+	ignore: !hasPdfBinary,
+	async fn() {
+		const result = await skreenPdf({ data: "<p>Test</p>" });
+		assertPdf(result);
+		assert(result.length > 100);
+	},
+});
 
-Deno.test({ name: "renders styled HTML to PDF", ignore: !hasPdfBinary, async fn() {
-	const result = await skreenPdf({
-		data: `<html><head><style>body{background:red}</style></head><body><h1>Styled</h1></body></html>`,
-		pageSize: "A4",
-		marginMm: 15,
-	});
-	assertPdf(result);
-} });
+Deno.test({
+	name: "renders styled HTML to PDF",
+	ignore: !hasPdfBinary,
+	async fn() {
+		const result = await skreenPdf({
+			data: `<html><head><style>body{background:red}</style></head><body><h1>Styled</h1></body></html>`,
+			pageSize: "A4",
+			marginMm: 15,
+		});
+		assertPdf(result);
+	},
+});
 
-Deno.test({ name: "renders multi-page PDF", ignore: !hasPdfBinary, async fn() {
-	const items = Array.from(
-		{ length: 60 },
-		(_, i) => `<p>Parágrafo ${i + 1}: conteúdo de teste para forçar quebra de página automática.</p>`,
-	).join("");
-	const result = await skreenPdf({
-		data: `<html><body>${items}</body></html>`,
-		pageSize: "A4",
-	});
-	assertPdf(result);
-	assert(result.length > 1000, "multi-page PDF should be larger");
-} });
+Deno.test({
+	name: "renders multi-page PDF",
+	ignore: !hasPdfBinary,
+	async fn() {
+		const items = Array.from(
+			{ length: 60 },
+			(_, i) => `<p>Parágrafo ${i + 1}: conteúdo de teste para forçar quebra de página automática.</p>`,
+		).join("");
+		const result = await skreenPdf({
+			data: `<html><body>${items}</body></html>`,
+			pageSize: "A4",
+		});
+		assertPdf(result);
+		assert(result.length > 1000, "multi-page PDF should be larger");
+	},
+});
