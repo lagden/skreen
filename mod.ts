@@ -26,8 +26,8 @@ export interface SkreenPdfOptions {
 	data: string;
 	/** Page size. Defaults to `"A4"`. */
 	pageSize?: "A4" | "A3" | "Letter";
-	/** Uniform margin in millimetres. Defaults to `20`. */
-	marginMm?: number;
+	/** Page margins in mm. Accepts CSS shorthand: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`. Defaults to `20`. */
+	marginMm?: number | string;
 	/** Document title written into PDF metadata. */
 	title?: string;
 	/** Document author written into PDF metadata. */
