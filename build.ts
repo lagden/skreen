@@ -49,4 +49,23 @@ if (wasmUrlEnv) {
 	console.log(`Patched WASM URL → ${wasmUrlEnv}`);
 }
 
+// ── Font base64 modules ───────────────────────────────────────────────────────
+// Embed font bytes as TypeScript constants so Deno downloads them at install
+// time (as part of module resolution) rather than fetching lazily at runtime.
+
+const { encodeBase64 } = await import("jsr:@std/encoding@1/base64");
+const fontMap: [string, string][] = [
+	["fonts/Inter-Regular.ttf", "fonts/inter_regular.ts"],
+	["fonts/Inter-Bold.ttf", "fonts/inter_bold.ts"],
+];
+for (const [src, dest] of fontMap) {
+	const bytes = await Deno.readFile(src);
+	const srcName = src.split("/").pop()!;
+	await Deno.writeTextFile(
+		dest,
+		`// Auto-generated from ${srcName} — do not edit manually\nexport const data = "${encodeBase64(bytes)}";\n`,
+	);
+	console.log(`Generated ${dest} (${bytes.length} bytes → ${(await Deno.stat(dest)).size} chars)`);
+}
+
 console.log("\nBuild complete → ./wasm/");

@@ -1,8 +1,11 @@
 import { createRequire } from "node:module";
+import { decodeBase64 } from "@std/encoding/base64";
 import { render_html } from "./wasm/skreen.js";
 // Static import so Deno tracks @fulgur-rs/cli as a dependency and installs it (with platform
 // binaries) in node_modules. Uses package.json to avoid executing any binary entry point.
 import "npm:@fulgur-rs/cli@0.16.0/package.json" with { type: "json" };
+import { data as interRegularB64 } from "./fonts/inter_regular.ts";
+import { data as interBoldB64 } from "./fonts/inter_bold.ts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -124,28 +127,20 @@ let _builtinFontCache: string[] | null = null;
 async function getBuiltinFontPaths(): Promise<string[]> {
 	if (_builtinFontCache) return _builtinFontCache;
 
-	const base = new URL("./fonts/", import.meta.url);
-
-	if (base.protocol === "file:") {
-		_builtinFontCache = [
-			new URL("Inter-Regular.ttf", base).pathname,
-			new URL("Inter-Bold.ttf", base).pathname,
-		];
-		return _builtinFontCache;
-	}
-
-	// Remote (JSR CDN): fetch once and cache to disk so fulgur can read the files.
 	const cacheDir = `${Deno.env.get("HOME") ?? "/tmp"}/.cache/skreen-fonts`;
 	await Deno.mkdir(cacheDir, { recursive: true });
-	const names = ["Inter-Regular.ttf", "Inter-Bold.ttf"];
+
+	const fonts: [string, string][] = [
+		["Inter-Regular.ttf", interRegularB64],
+		["Inter-Bold.ttf", interBoldB64],
+	];
 	const paths: string[] = [];
-	for (const name of names) {
+	for (const [name, b64] of fonts) {
 		const dest = `${cacheDir}/${name}`;
 		try {
 			await Deno.stat(dest);
 		} catch {
-			const bytes = await fetch(new URL(name, base)).then((r) => r.arrayBuffer());
-			await Deno.writeFile(dest, new Uint8Array(bytes));
+			await Deno.writeFile(dest, decodeBase64(b64));
 		}
 		paths.push(dest);
 	}

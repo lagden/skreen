@@ -17,13 +17,14 @@
 	},
 	"tasks": {
 		"build": "deno run --allow-run --allow-write --allow-read --allow-ffi --allow-env build.ts",
-		"test": "deno test --allow-read --allow-ffi --allow-net --allow-run mod_test.ts",
+		"test": "deno test --allow-read --allow-ffi --allow-net --allow-run --allow-env=HOME --allow-write mod_test.ts",
 		"fmt:chk": "deno fmt --check"
 	},
 	"nodeModulesDir": "auto",
 	"imports": {
 		"@fulgur-rs/cli": "npm:@fulgur-rs/cli@0.16.0",
-		"@std/assert": "jsr:@std/assert@1.0.19"
+		"@std/assert": "jsr:@std/assert@1.0.19",
+		"@std/encoding": "jsr:@std/encoding@1.0.10"
 	},
 	"fmt": {
 		"useTabs": true,
