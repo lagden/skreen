@@ -139,8 +139,7 @@ const cachedTextEncoder = new TextEncoder();
 
 let WASM_VECTOR_LEN = 0;
 
-const { pathToFileURL } = await import('node:url');
-const wasmUrl = pathToFileURL(new URL('skreen_bg.wasm', import.meta.url).pathname);
+const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);
 const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
 const wasmInstance = wasmInstantiated.instance;
 const wasm = wasmInstance.exports;

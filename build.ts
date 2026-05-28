@@ -30,13 +30,12 @@ await run("wasm-bindgen", [
 	"./target/wasm32-unknown-unknown/release/skreen.wasm",
 ]);
 
-// Patch the WASM loader in the generated skreen.js.
+// Patch the WASM URL for remote hosting (e.g. GitHub Releases).
+// Set WASM_URL to an absolute URL before running the build.
 const wasmUrlEnv = Deno.env.get("WASM_URL");
-const jsPath = "./wasm/skreen.js";
-let js = await Deno.readTextFile(jsPath);
-
 if (wasmUrlEnv) {
-	// Legacy: fetch from an absolute remote URL (e.g. GitHub Releases).
+	const jsPath = "./wasm/skreen.js";
+	let js = await Deno.readTextFile(jsPath);
 	js = js
 		.replace(
 			"new URL('skreen_bg.wasm', import.meta.url)",
@@ -46,21 +45,8 @@ if (wasmUrlEnv) {
 			"await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports())",
 			"await WebAssembly.instantiate(await (await fetch(wasmUrl)).arrayBuffer(), __wbg_get_imports())",
 		);
+	await Deno.writeTextFile(jsPath, js);
 	console.log(`Patched WASM URL → ${wasmUrlEnv}`);
-} else {
-	// Default: use pathToFileURL (node:url) so the WASM is always loaded from
-	// the local filesystem. Works when deps are vendored (e.g. `deno vendor`
-	// during docker build), keeping import.meta.url as a file:// path.
-	js = js.replace(
-		"const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);\n" +
-			"const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());",
-		"const { pathToFileURL } = await import('node:url');\n" +
-			"const wasmUrl = pathToFileURL(new URL('skreen_bg.wasm', import.meta.url).pathname);\n" +
-			"const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());",
-	);
-	console.log("Patched WASM loader → pathToFileURL (node:url)");
 }
-
-await Deno.writeTextFile(jsPath, js);
 
 console.log("\nBuild complete → ./wasm/");
