@@ -11,6 +11,7 @@
 		"include": [
 			"mod.ts",
 			"wasm/",
+			"fonts/",
 			"README.md"
 		]
 	},

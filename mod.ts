@@ -26,12 +26,32 @@ export interface SkreenPdfOptions {
 	data: string;
 	/** Page size. Defaults to `"A4"`. */
 	pageSize?: "A4" | "A3" | "Letter";
+	/** Landscape orientation. */
+	landscape?: boolean;
 	/** Page margins in mm. Accepts CSS shorthand: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`. Defaults to `20`. */
 	marginMm?: number | string;
 	/** Document title written into PDF metadata. */
 	title?: string;
 	/** Document author written into PDF metadata. */
 	author?: string;
+	/** Document language tag (BCP 47, e.g. `"en"`, `"pt-BR"`). Required for PDF/UA-1. */
+	language?: string;
+	/** Font files to bundle (absolute paths). Passed to fulgur via `--font` (repeatable). */
+	fonts?: string[];
+	/** CSS files to include (absolute paths). Passed to fulgur via `--css` (repeatable). */
+	css?: string[];
+	/** Generate PDF bookmarks (outline) from `h1`–`h6` headings. */
+	bookmarks?: boolean;
+	/** Enable Tagged PDF output (structure tree for accessibility). */
+	tagged?: boolean;
+	/** Enable PDF/UA-1 conformance (implies `tagged` and `bookmarks`). */
+	pdfUa?: boolean;
+	/**
+	 * Prepend the built-in Inter Regular + Bold fonts to the font list.
+	 * Defaults to `true` — ensures text is visible in environments without system fonts (e.g. Docker Alpine).
+	 * Set to `false` to rely solely on system fonts or your own `fonts` list.
+	 */
+	useBuiltinFonts?: boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -99,6 +119,40 @@ function resolveBinaryPath(): string {
 	}
 }
 
+let _builtinFontCache: string[] | null = null;
+
+async function getBuiltinFontPaths(): Promise<string[]> {
+	if (_builtinFontCache) return _builtinFontCache;
+
+	const base = new URL("./fonts/", import.meta.url);
+
+	if (base.protocol === "file:") {
+		_builtinFontCache = [
+			new URL("Inter-Regular.ttf", base).pathname,
+			new URL("Inter-Bold.ttf", base).pathname,
+		];
+		return _builtinFontCache;
+	}
+
+	// Remote (JSR CDN): fetch once and cache to disk so fulgur can read the files.
+	const cacheDir = `${Deno.env.get("HOME") ?? "/tmp"}/.cache/skreen-fonts`;
+	await Deno.mkdir(cacheDir, { recursive: true });
+	const names = ["Inter-Regular.ttf", "Inter-Bold.ttf"];
+	const paths: string[] = [];
+	for (const name of names) {
+		const dest = `${cacheDir}/${name}`;
+		try {
+			await Deno.stat(dest);
+		} catch {
+			const bytes = await fetch(new URL(name, base)).then((r) => r.arrayBuffer());
+			await Deno.writeFile(dest, new Uint8Array(bytes));
+		}
+		paths.push(dest);
+	}
+	_builtinFontCache = paths;
+	return _builtinFontCache;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
@@ -137,9 +191,17 @@ export async function skreen({
 export async function skreenPdf({
 	data,
 	pageSize = "A4",
+	landscape,
 	marginMm = 20,
 	title,
 	author,
+	language,
+	fonts,
+	css,
+	bookmarks,
+	tagged,
+	pdfUa,
+	useBuiltinFonts = true,
 }: SkreenPdfOptions): Promise<Uint8Array> {
 	const html = isUrl(data) ? await fetch(data).then((r) => r.text()) : data;
 
@@ -149,6 +211,15 @@ export async function skreenPdf({
 	const args = ["render", "--stdin", "-o", "-", "--size", pageSize, "--margin", String(marginMm)];
 	if (title !== undefined) args.push("--title", title);
 	if (author !== undefined) args.push("--author", author);
+	if (language !== undefined) args.push("--language", language);
+	if (landscape) args.push("--landscape");
+	if (bookmarks) args.push("--bookmarks");
+	if (tagged) args.push("--tagged");
+	if (pdfUa) args.push("--pdf-ua");
+
+	const allFonts = useBuiltinFonts ? [...(await getBuiltinFontPaths()), ...(fonts ?? [])] : (fonts ?? []);
+	for (const f of allFonts) args.push("--font", f);
+	for (const c of (css ?? [])) args.push("--css", c);
 
 	const cmd = new Deno.Command(binaryPath, {
 		args,
