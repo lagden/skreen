@@ -56,6 +56,26 @@ automatically.
 > pagination. Use `break-before: page` on any section containing SVG images to ensure they always start on an explicit
 > new page.
 
+#### Fonts in Docker / Alpine environments
+
+By default, `skreenPdf` prepends the built-in **Inter Regular** and **Inter Bold** fonts to every render
+(`useBuiltinFonts: true`). This ensures text is always visible even in minimal environments like Alpine Linux that ship
+without system fonts.
+
+```ts
+// Default — Inter fonts are included automatically, no extra config needed.
+const pdf = await skreenPdf({ data: html });
+
+// Opt out if you rely on system fonts or supply your own.
+const pdf = await skreenPdf({ data: html, useBuiltinFonts: false });
+
+// Supply additional fonts alongside the built-in ones.
+const pdf = await skreenPdf({
+	data: html,
+	fonts: ["/usr/share/fonts/NotoSansCJK.ttf"],
+});
+```
+
 ### With custom fonts
 
 Pass additional font files as `Uint8Array` via the `fonts` option. These fonts are registered with the renderer
@@ -102,13 +122,21 @@ by the rendered document height (capped at 4000 logical pixels).
 
 Returns a PDF file as a `Uint8Array`. Uses a native binary — requires `--allow-run`.
 
-| Option     | Type     | Default | Description                                                               |
-| ---------- | -------- | ------- | ------------------------------------------------------------------------- |
-| `data`     | `string` | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string. |
-| `pageSize` | `string` | `"A4"`  | Page size: `"A4"`, `"A3"`, or `"Letter"`.                                 |
-| `marginMm` | `number` | `20`    | Uniform page margin in millimetres.                                       |
-| `title`    | `string` | —       | Document title written into PDF metadata.                                 |
-| `author`   | `string` | —       | Document author written into PDF metadata.                                |
+| Option            | Type               | Default | Description                                                                                    |
+| ----------------- | ------------------ | ------- | ---------------------------------------------------------------------------------------------- |
+| `data`            | `string`           | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string.                      |
+| `pageSize`        | `string`           | `"A4"`  | Page size: `"A4"`, `"A3"`, or `"Letter"`.                                                      |
+| `landscape`       | `boolean`          | —       | Landscape orientation.                                                                         |
+| `marginMm`        | `number \| string` | `20`    | Page margins in mm. Accepts CSS shorthand: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`.   |
+| `title`           | `string`           | —       | Document title written into PDF metadata.                                                      |
+| `author`          | `string`           | —       | Document author written into PDF metadata.                                                     |
+| `language`        | `string`           | —       | Document language tag (BCP 47, e.g. `"en"`, `"pt-BR"`). Required for PDF/UA-1.                 |
+| `fonts`           | `string[]`         | —       | Absolute paths to font files to bundle. Added after the built-in Inter fonts.                  |
+| `css`             | `string[]`         | —       | Absolute paths to CSS files to include.                                                        |
+| `bookmarks`       | `boolean`          | —       | Generate PDF bookmarks (outline) from `h1`–`h6` headings.                                      |
+| `tagged`          | `boolean`          | —       | Enable Tagged PDF output (structure tree for accessibility).                                   |
+| `pdfUa`           | `boolean`          | —       | Enable PDF/UA-1 conformance (implies `tagged` and `bookmarks`).                                |
+| `useBuiltinFonts` | `boolean`          | `true`  | Prepend built-in Inter Regular + Bold fonts. Disable to rely solely on system or custom fonts. |
 
 The PDF contains real, selectable text and supports automatic multi-page layout via CSS pagination. Supported platforms:
 macOS (Apple Silicon and Intel), Linux (x86\_64, ARM64, and musl), and Windows (x86\_64). The correct binary is selected
