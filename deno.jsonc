@@ -1,7 +1,7 @@
 {
 	"name": "@tadashi/skreen",
-	"version": "3.0.7",
-	"description": "Render HTML to PNG screenshots using a Rust/WASM renderer powered by Blitz and Vello.",
+	"version": "3.0.8",
+	"description": "Render HTML to PNG screenshots or a selectable-text PDF using a Rust core.",
 	"license": "MIT",
 	"runtime": ["deno", "browser"],
 	"exports": {
@@ -17,7 +17,7 @@
 	},
 	"tasks": {
 		"build": "deno run --allow-run --allow-write --allow-read --allow-ffi --allow-env build.ts",
-		"test": "deno test --allow-read --allow-ffi --allow-net --allow-run --allow-env=HOME --allow-write mod_test.ts",
+		"test": "deno test --allow-read --allow-ffi --allow-net --allow-run --allow-env --allow-write mod_test.ts",
 		"fmt:chk": "deno fmt --check"
 	},
 	"nodeModulesDir": "auto",

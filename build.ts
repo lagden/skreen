@@ -30,38 +30,134 @@ await run("wasm-bindgen", [
 	"./target/wasm32-unknown-unknown/release/skreen.wasm",
 ]);
 
-// Patch skreen.js to load the WASM via Deno.readFile when running from a local file://
-// path (e.g. deno vendor / "vendor": true), falling back to fetch for remote URLs.
-// This avoids network requests at runtime in sandboxed environments (e.g. ECS Fargate).
-// Deno's vendor tool recognises new URL('...', import.meta.url) and includes the .wasm
-// file in the vendor directory, so Deno.readFile will find it there at runtime.
+// Patch wasm/skreen.js to use Deno 2.x native ESM WASM import so that
+// `deno vendor` tracks skreen_bg.wasm (static imports are tracked; fetch/new
+// URL patterns are not). Also generate a real wasm/skreen_bg.js that exports
+// the host functions the WASM binary imports, using a circular ESM reference
+// back to skreen_bg.wasm (safe because host function bodies only run at call
+// time, after the module graph is fully resolved).
 {
 	const jsPath = "./wasm/skreen.js";
-	let js = await Deno.readTextFile(jsPath);
-	js = js.replace(
-		`const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);\nconst wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());`,
-		`const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);\n` +
-			`const _wasmBytes = wasmUrl.protocol === 'file:'\n` +
-			`  ? await Deno.readFile(wasmUrl)\n` +
-			`  : await (await fetch(wasmUrl)).arrayBuffer();\n` +
-			`const wasmInstantiated = await WebAssembly.instantiate(_wasmBytes, __wbg_get_imports());`,
-	);
-	await Deno.writeTextFile(jsPath, js);
-	console.log("Patched wasm/skreen.js → Deno.readFile for file:// URLs");
+	const js = await Deno.readTextFile(jsPath);
+
+	// ── Locate __wbg_get_imports() function boundaries ──────────────────────
+	const importFnMarker = "\nfunction __wbg_get_imports() {";
+	const importFnStart = js.indexOf(importFnMarker);
+	if (importFnStart === -1) throw new Error("__wbg_get_imports not found in wasm/skreen.js");
+	const importFnBracePos = js.indexOf("{", importFnStart + importFnMarker.length - 1);
+	let importFnEnd = -1;
+	{
+		let depth = 0;
+		for (let i = importFnBracePos; i < js.length; i++) {
+			if (js[i] === "{") depth++;
+			else if (js[i] === "}") {
+				depth--;
+				if (depth === 0) {
+					importFnEnd = i + 1;
+					break;
+				}
+			}
+		}
+	}
+	if (importFnEnd === -1) throw new Error("Could not find end of __wbg_get_imports");
+	const importFnText = js.slice(importFnStart, importFnEnd);
+
+	// ── Extract import0 object content ──────────────────────────────────────
+	const import0Marker = "    const import0 = {";
+	const import0Pos = importFnText.indexOf(import0Marker);
+	const objBraceStart = importFnText.indexOf("{", import0Pos + import0Marker.length - 1);
+	let objBraceEnd = -1;
+	{
+		let depth = 0;
+		for (let i = objBraceStart; i < importFnText.length; i++) {
+			if (importFnText[i] === "{") depth++;
+			else if (importFnText[i] === "}") {
+				depth--;
+				if (depth === 0) {
+					objBraceEnd = i;
+					break;
+				}
+			}
+		}
+	}
+	const import0Content = importFnText.slice(objBraceStart + 1, objBraceEnd);
+
+	// ── Parse host function entries ──────────────────────────────────────────
+	const hostFns: Array<[string, string]> = [];
+	const entryRe = /\n {8}(\w+): (function\([^)]*\) \{)/g;
+	let m: RegExpExecArray | null;
+	while ((m = entryRe.exec(import0Content)) !== null) {
+		const name = m[1];
+		const fnHeader = m[2];
+		const bodyStart = m.index + m[0].length;
+		let fnEnd = -1;
+		let depth = 1;
+		for (let i = bodyStart; i < import0Content.length; i++) {
+			if (import0Content[i] === "{") depth++;
+			else if (import0Content[i] === "}") {
+				depth--;
+				if (depth === 0) {
+					fnEnd = i + 1;
+					break;
+				}
+			}
+		}
+		hostFns.push([name, `${fnHeader}${import0Content.slice(bodyStart, fnEnd)}`]);
+	}
+
+	// ── Generate wasm/skreen_bg.js with host function exports ────────────────
+	const bgHelpers = `let cachedUint8ArrayMemory0 = null;
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
 }
 
-// Patch the WASM URL for remote hosting (e.g. GitHub Releases).
-// Set WASM_URL to an absolute URL before running the build.
-const wasmUrlEnv = Deno.env.get("WASM_URL");
-if (wasmUrlEnv) {
-	const jsPath = "./wasm/skreen.js";
-	let js = await Deno.readTextFile(jsPath);
-	js = js.replace(
-		"new URL('skreen_bg.wasm', import.meta.url)",
-		`new URL('${wasmUrlEnv}')`,
-	);
-	await Deno.writeTextFile(jsPath, js);
-	console.log(`Patched WASM URL → ${wasmUrlEnv}`);
+const cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
+function decodeText(ptr, len) {
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+function getStringFromWasm0(ptr, len) {
+    return decodeText(ptr >>> 0, len);
+}
+
+function getArrayU8FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+}`;
+
+	// Use `export function` (hoisted) so references are available when the
+	// WASM module resolves its imports during the circular ESM evaluation.
+	const bgExports = hostFns
+		.map(([name, fn]) => `export ${fn.replace("function(", `function ${name}(`)}`)
+		.join("\n\n");
+
+	const bgJs =
+		`// Auto-generated by build.ts — do not edit manually\nimport * as wasm from "./skreen_bg.wasm";\n\n${bgHelpers}\n\n${bgExports}\n`;
+	await Deno.writeTextFile("./wasm/skreen_bg.js", bgJs);
+	console.log(`Generated wasm/skreen_bg.js (${hostFns.length} host functions)`);
+
+	// ── Patch wasm/skreen.js ─────────────────────────────────────────────────
+	const patched = js
+		.replace(
+			`/* @ts-self-types="./skreen.d.ts" */`,
+			`/* @ts-self-types="./skreen.d.ts" */\nimport * as skreenBgWasm from "./skreen_bg.wasm";`,
+		)
+		.replace(importFnText, "")
+		.replace(
+			/\n+const wasmUrl[\s\S]*?wasm\.__wbindgen_start\(\);/,
+			"\nskreenBgWasm.__wbindgen_start();",
+		)
+		.replaceAll("wasm.", "skreenBgWasm.")
+		// Remove helpers that were only used by host functions now in skreen_bg.js
+		.replace(/\nfunction getStringFromWasm0[\s\S]*?\n\}\n/, "\n")
+		.replace(/\nlet cachedTextDecoder[\s\S]*?\nfunction decodeText[\s\S]*?\n\}\n/, "\n");
+
+	await Deno.writeTextFile(jsPath, patched);
+	console.log("Patched wasm/skreen.js → native WASM ESM import");
 }
 
 // ── Font base64 modules ───────────────────────────────────────────────────────

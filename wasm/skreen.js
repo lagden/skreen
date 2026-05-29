@@ -1,4 +1,5 @@
 /* @ts-self-types="./skreen.d.ts" */
+import * as skreenBgWasm from "./skreen_bg.wasm";
 
 /**
  * Renders an HTML document to a PNG image and returns the encoded bytes.
@@ -21,53 +22,17 @@
  * @returns {Uint8Array}
  */
 export function render_html(html, width, height, scale, custom_fonts) {
-    const ptr0 = passStringToWasm0(html, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const ptr0 = passStringToWasm0(html, skreenBgWasm.__wbindgen_malloc, skreenBgWasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.render_html(ptr0, len0, width, height, scale, isLikeNone(custom_fonts) ? 0 : addToExternrefTable0(custom_fonts));
+    const ret = skreenBgWasm.render_html(ptr0, len0, width, height, scale, isLikeNone(custom_fonts) ? 0 : addToExternrefTable0(custom_fonts));
     var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    skreenBgWasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
-}
-function __wbg_get_imports() {
-    const import0 = {
-        __proto__: null,
-        __wbg___wbindgen_throw_1506f2235d1bdba0: function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
-        },
-        __wbg_get_unchecked_33f6e5c9e2f2d6b2: function(arg0, arg1) {
-            const ret = arg0[arg1 >>> 0];
-            return ret;
-        },
-        __wbg_length_4a591ecaa01354d9: function(arg0) {
-            const ret = arg0.length;
-            return ret;
-        },
-        __wbg_length_66f1a4b2e9026940: function(arg0) {
-            const ret = arg0.length;
-            return ret;
-        },
-        __wbg_prototypesetcall_3249fc62a0fafa30: function(arg0, arg1, arg2) {
-            Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), arg2);
-        },
-        __wbindgen_init_externref_table: function() {
-            const table = wasm.__wbindgen_externrefs;
-            const offset = table.grow(4);
-            table.set(0, undefined);
-            table.set(offset + 0, undefined);
-            table.set(offset + 1, null);
-            table.set(offset + 2, true);
-            table.set(offset + 3, false);
-        },
-    };
-    return {
-        __proto__: null,
-        "./skreen_bg.js": import0,
-    };
 }
 
 function addToExternrefTable0(obj) {
-    const idx = wasm.__externref_table_alloc();
-    wasm.__wbindgen_externrefs.set(idx, obj);
+    const idx = skreenBgWasm.__externref_table_alloc();
+    skreenBgWasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
 }
 
@@ -76,14 +41,11 @@ function getArrayU8FromWasm0(ptr, len) {
     return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
 }
 
-function getStringFromWasm0(ptr, len) {
-    return decodeText(ptr >>> 0, len);
-}
 
 let cachedUint8ArrayMemory0 = null;
 function getUint8ArrayMemory0() {
     if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
-        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+        cachedUint8ArrayMemory0 = new Uint8Array(skreenBgWasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
 }
@@ -129,21 +91,8 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 
-let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-cachedTextDecoder.decode();
-function decodeText(ptr, len) {
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
-}
 
 const cachedTextEncoder = new TextEncoder();
 
 let WASM_VECTOR_LEN = 0;
-
-const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);
-const _wasmBytes = wasmUrl.protocol === 'file:'
-  ? await Deno.readFile(wasmUrl)
-  : await (await fetch(wasmUrl)).arrayBuffer();
-const wasmInstantiated = await WebAssembly.instantiate(_wasmBytes, __wbg_get_imports());
-const wasmInstance = wasmInstantiated.instance;
-const wasm = wasmInstance.exports;
-wasm.__wbindgen_start();
+skreenBgWasm.__wbindgen_start();
