@@ -105,29 +105,15 @@ await run("wasm-bindgen", [
 		hostFns.push([name, `${fnHeader}${import0Content.slice(bodyStart, fnEnd)}`]);
 	}
 
+	// ── Extract bgHelpers: wasm-bindgen places helpers AFTER __wbg_get_imports and
+	// BEFORE the init code (const wasmUrl). These use `wasm.` which is correct for
+	// skreen_bg.js (which imports from ./skreen_bg.wasm as `wasm`).
+	const initCodeMarker = "\nconst wasmUrl";
+	const initCodeStart = js.indexOf(initCodeMarker);
+	if (initCodeStart === -1) throw new Error("init code (const wasmUrl) not found in wasm/skreen.js");
+	const bgHelpers = js.slice(importFnEnd, initCodeStart).trim();
+
 	// ── Generate wasm/skreen_bg.js with host function exports ────────────────
-	const bgHelpers = `let cachedUint8ArrayMemory0 = null;
-function getUint8ArrayMemory0() {
-    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
-        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
-    }
-    return cachedUint8ArrayMemory0;
-}
-
-const cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-cachedTextDecoder.decode();
-function decodeText(ptr, len) {
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
-}
-
-function getStringFromWasm0(ptr, len) {
-    return decodeText(ptr >>> 0, len);
-}
-
-function getArrayU8FromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
-}`;
 
 	// Use `export function` (hoisted) so references are available when the
 	// WASM module resolves its imports during the circular ESM evaluation.
@@ -158,25 +144,6 @@ function getArrayU8FromWasm0(ptr, len) {
 
 	await Deno.writeTextFile(jsPath, patched);
 	console.log("Patched wasm/skreen.js → native WASM ESM import");
-}
-
-// ── Font base64 modules ───────────────────────────────────────────────────────
-// Embed font bytes as TypeScript constants so Deno downloads them at install
-// time (as part of module resolution) rather than fetching lazily at runtime.
-
-const { encodeBase64 } = await import("jsr:@std/encoding@1/base64");
-const fontMap: [string, string][] = [
-	["fonts/Inter-Regular.ttf", "fonts/inter_regular.ts"],
-	["fonts/Inter-Bold.ttf", "fonts/inter_bold.ts"],
-];
-for (const [src, dest] of fontMap) {
-	const bytes = await Deno.readFile(src);
-	const srcName = src.split("/").pop()!;
-	await Deno.writeTextFile(
-		dest,
-		`// Auto-generated from ${srcName} — do not edit manually\nexport const data = "${encodeBase64(bytes)}";\n`,
-	);
-	console.log(`Generated ${dest} (${bytes.length} bytes → ${(await Deno.stat(dest)).size} chars)`);
 }
 
 console.log("\nBuild complete → ./wasm/");

@@ -12,17 +12,25 @@ js-sys = "0.3.98"
 png = "0.18.1"
 base64 = "0.22"
 percent-encoding = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
-blitz-html               = { version = "0.3.0-alpha.4" }
-blitz-dom                = { version = "0.3.0-alpha.4", default-features = false, features = ["svg", "woff"] }
-blitz-paint              = { version = "0.3.0-alpha.4" }
-blitz-traits             = { version = "0.3.0-alpha.4" }
-linebender_resource_handle = "0.1.1"
-parley                   = { version = "0.9", default-features = false, features = ["std"] }
-anyrender           = "0.10"
-anyrender_vello_cpu = "0.12"
-peniko = "0.6"
-kurbo = "0.13"
+# PDF rendering via fulgur (blitz 0.2 internally)
+fulgur = "0.16"
+# Force getrandom's wasm_js backend for lopdf/rand inside fulgur
+getrandom = { version = "0.4", default-features = false, features = ["wasm_js"] }
+
+# PNG rendering — aligned to the same blitz 0.2 that fulgur uses
+blitz-html   = "0.2"
+blitz-dom    = { version = "0.2", default-features = false, features = ["svg", "woff-rust"] }
+blitz-paint  = { version = "0.2", default-features = false, features = ["svg"] }
+blitz-traits = "0.2"
+anyrender           = "0.6"
+anyrender_vello_cpu = "0.7"
+parley = { version = "0.6", default-features = false, features = ["std"] }
+linebender_resource_handle = "0.1"
+peniko = "0.5"
+kurbo = "0.12"
 
 [profile.release]
 opt-level = "z"

@@ -2,18 +2,23 @@
 import * as skreenBgWasm from "./skreen_bg.wasm";
 
 /**
- * Renders an HTML document to a PNG image and returns the encoded bytes.
- *
- * # Parameters
- * - `html`         — Raw HTML string to render.
- * - `width`        — Viewport width in logical (CSS) pixels.
- * - `height`       — Minimum viewport height in logical pixels. Pass `0` to expand to content height.
- * - `scale`        — Device-pixel ratio (e.g. `2.0` for HiDPI). The physical pixel dimensions of
- *                    the output are `width * scale` × `computed_height * scale`.
- * - `custom_fonts` — Optional JS array of `Uint8Array` font files to register alongside Inter.
- *
- * The final image height is the document's computed content height clamped to 4 000 logical pixels,
- * then multiplied by `scale`. The color scheme is fixed to Light; dark mode is not supported.
+ * @param {string} html
+ * @param {any} options
+ * @returns {Uint8Array}
+ */
+export function render_pdf(html, options) {
+    const ptr0 = passStringToWasm0(html, skreenBgWasm.__wbindgen_malloc, skreenBgWasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = skreenBgWasm.render_pdf(ptr0, len0, options);
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    skreenBgWasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
  * @param {string} html
  * @param {number} width
  * @param {number} height
@@ -21,10 +26,10 @@ import * as skreenBgWasm from "./skreen_bg.wasm";
  * @param {Array<any> | null} [custom_fonts]
  * @returns {Uint8Array}
  */
-export function render_html(html, width, height, scale, custom_fonts) {
+export function render_png(html, width, height, scale, custom_fonts) {
     const ptr0 = passStringToWasm0(html, skreenBgWasm.__wbindgen_malloc, skreenBgWasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = skreenBgWasm.render_html(ptr0, len0, width, height, scale, isLikeNone(custom_fonts) ? 0 : addToExternrefTable0(custom_fonts));
+    const ret = skreenBgWasm.render_png(ptr0, len0, width, height, scale, isLikeNone(custom_fonts) ? 0 : addToExternrefTable0(custom_fonts));
     var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
     skreenBgWasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
@@ -36,9 +41,82 @@ function addToExternrefTable0(obj) {
     return idx;
 }
 
+function debugString(val) {
+    // primitive types
+    const type = typeof val;
+    if (type == 'number' || type == 'boolean' || val == null) {
+        return  `${val}`;
+    }
+    if (type == 'string') {
+        return `"${val}"`;
+    }
+    if (type == 'symbol') {
+        const description = val.description;
+        if (description == null) {
+            return 'Symbol';
+        } else {
+            return `Symbol(${description})`;
+        }
+    }
+    if (type == 'function') {
+        const name = val.name;
+        if (typeof name == 'string' && name.length > 0) {
+            return `Function(${name})`;
+        } else {
+            return 'Function';
+        }
+    }
+    // objects
+    if (Array.isArray(val)) {
+        const length = val.length;
+        let debug = '[';
+        if (length > 0) {
+            debug += debugString(val[0]);
+        }
+        for(let i = 1; i < length; i++) {
+            debug += ', ' + debugString(val[i]);
+        }
+        debug += ']';
+        return debug;
+    }
+    // Test for built-in
+    const builtInMatches = /\[object ([^\]]+)\]/.exec(toString.call(val));
+    let className;
+    if (builtInMatches && builtInMatches.length > 1) {
+        className = builtInMatches[1];
+    } else {
+        // Failed to match the standard '[object ClassName]'
+        return toString.call(val);
+    }
+    if (className == 'Object') {
+        // we're a user defined class or Object
+        // JSON.stringify avoids problems with cycles, and is generally much
+        // easier than looping through ownProperties of `val`.
+        try {
+            return 'Object(' + JSON.stringify(val) + ')';
+        } catch (_) {
+            return 'Object';
+        }
+    }
+    // errors
+    if (val instanceof Error) {
+        return `${val.name}: ${val.message}\n${val.stack}`;
+    }
+    // TODO we could test for more things here, like `Set`s and `Map`s.
+    return className;
+}
+
 function getArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+}
+
+let cachedDataViewMemory0 = null;
+function getDataViewMemory0() {
+    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== skreenBgWasm.memory.buffer)) {
+        cachedDataViewMemory0 = new DataView(skreenBgWasm.memory.buffer);
+    }
+    return cachedDataViewMemory0;
 }
 
 
@@ -48,6 +126,15 @@ function getUint8ArrayMemory0() {
         cachedUint8ArrayMemory0 = new Uint8Array(skreenBgWasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
+}
+
+function handleError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        const idx = addToExternrefTable0(e);
+        skreenBgWasm.__wbindgen_exn_store(idx);
+    }
 }
 
 function isLikeNone(x) {
@@ -89,6 +176,12 @@ function passStringToWasm0(arg, malloc, realloc) {
 
     WASM_VECTOR_LEN = offset;
     return ptr;
+}
+
+function takeFromExternrefTable0(idx) {
+    const value = skreenBgWasm.__wbindgen_externrefs.get(idx);
+    skreenBgWasm.__externref_table_dealloc(idx);
+    return value;
 }
 
 

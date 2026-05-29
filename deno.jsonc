@@ -9,25 +9,18 @@
 	},
 	"publish": {
 		"include": [
-			"fonts/",
 			"wasm/",
 			"mod.ts",
 			"README.md"
-		],
-		"exclude": [
-			"fonts/*.ttf"
 		]
 	},
 	"tasks": {
 		"build": "deno run --allow-run --allow-write --allow-read --allow-ffi --allow-env build.ts",
-		"test": "deno test --allow-read --allow-ffi --allow-net --allow-run --allow-env --allow-write mod_test.ts",
+		"test": "deno test --allow-read --allow-ffi --allow-net --allow-env mod_test.ts",
 		"fmt:chk": "deno fmt --check"
 	},
-	"nodeModulesDir": "auto",
 	"imports": {
-		"@fulgur-rs/cli": "npm:@fulgur-rs/cli@0.16.0",
-		"@std/assert": "jsr:@std/assert@1.0.19",
-		"@std/encoding": "jsr:@std/encoding@1.0.10"
+		"@std/assert": "jsr:@std/assert@1.0.19"
 	},
 	"fmt": {
 		"useTabs": true,
