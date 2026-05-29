@@ -30,6 +30,14 @@ await run("wasm-bindgen", [
 	"./target/wasm32-unknown-unknown/release/skreen.wasm",
 ]);
 
+await run("wasm-opt", [
+	"-Oz",
+	"--strip-debug",
+	"./wasm/skreen_bg.wasm",
+	"-o",
+	"./wasm/skreen_bg.wasm",
+]);
+
 // Patch wasm/skreen.js to use Deno 2.x native ESM WASM import so that
 // `deno vendor` tracks skreen_bg.wasm (static imports are tracked; fetch/new
 // URL patterns are not). Also generate a real wasm/skreen_bg.js that exports

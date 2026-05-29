@@ -10,8 +10,8 @@ export interface SkreenOptions {
 	height?: number;
 	/** Device-pixel ratio applied to the output bitmap. Defaults to `2.0`. */
 	scale?: number;
-	/** Additional font files to embed (raw bytes). Augments the built-in Inter Regular + Bold. */
-	fonts?: Uint8Array[];
+	/** Font files to embed — file path (`string`) or raw bytes (`Uint8Array`). */
+	fonts?: Array<string | Uint8Array>;
 }
 
 /** Options for {@linkcode skreenPdf}. */
@@ -22,12 +22,24 @@ export interface SkreenPdfOptions {
 	pageSize?: "A4" | "A3" | "Letter";
 	/** Landscape orientation. */
 	landscape?: boolean;
-	/** Page margins in mm (uniform). Defaults to `20`. */
-	marginMm?: number;
+	/** Page margins in mm. Accepts CSS shorthand: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`. Defaults to `20`. */
+	marginMm?: number | string;
 	/** Document title written into PDF metadata. */
 	title?: string;
-	/** Document language tag (BCP 47, e.g. `"en"`, `"pt-BR"`). */
+	/** Document author written into PDF metadata. */
+	author?: string;
+	/** Document language tag (BCP 47, e.g. `"en"`, `"pt-BR"`). Required for PDF/UA-1. */
 	language?: string;
+	/** Font files to embed — file path (`string`) or raw bytes (`Uint8Array`). */
+	fonts?: Array<string | Uint8Array>;
+	/** CSS strings to inject into the document. */
+	css?: string[];
+	/** Generate PDF bookmarks (outline) from `h1`–`h6` headings. */
+	bookmarks?: boolean;
+	/** Enable Tagged PDF output (structure tree for accessibility). */
+	tagged?: boolean;
+	/** Enable PDF/UA-1 conformance (implies `tagged` and `bookmarks`). */
+	pdfUa?: boolean;
 }
 
 // @ts-types="./wasm/skreen.d.ts"
@@ -37,6 +49,18 @@ import { render_pdf, render_png } from "./wasm/skreen.js";
 
 function isUrl(s: string): boolean {
 	return s.startsWith("http://") || s.startsWith("https://") || s.startsWith("file://");
+}
+
+function toBase64(bytes: Uint8Array): string {
+	let binary = "";
+	for (let i = 0; i < bytes.length; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+	return btoa(binary);
+}
+
+async function resolveFont(font: string | Uint8Array): Promise<Uint8Array> {
+	return typeof font === "string" ? await Deno.readFile(font) : font;
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -58,7 +82,8 @@ export async function skreen({
 	fonts,
 }: SkreenOptions): Promise<Uint8Array> {
 	const html = isUrl(data) ? await fetch(data).then((r) => r.text()) : data;
-	return render_png(html, width, height, scale, fonts ?? null);
+	const resolvedFonts = fonts ? await Promise.all(fonts.map(resolveFont)) : null;
+	return render_png(html, width, height, scale, resolvedFonts);
 }
 
 /**
@@ -77,14 +102,27 @@ export async function skreenPdf({
 	landscape,
 	marginMm,
 	title,
+	author,
 	language,
+	fonts,
+	css,
+	bookmarks,
+	tagged,
+	pdfUa,
 }: SkreenPdfOptions): Promise<Uint8Array> {
 	const html = isUrl(data) ? await fetch(data).then((r) => r.text()) : data;
+	const resolvedFonts = fonts ? await Promise.all(fonts.map(resolveFont)) : [];
 	return render_pdf(html, {
 		pageSize,
 		marginMm,
 		landscape: landscape ?? false,
 		title,
+		author,
 		language,
+		fonts: resolvedFonts.map(toBase64),
+		css: css ?? [],
+		bookmarks: bookmarks ?? false,
+		tagged: tagged ?? false,
+		pdfUa: pdfUa ?? false,
 	});
 }

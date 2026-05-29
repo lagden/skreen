@@ -16,8 +16,6 @@ use serde::Deserialize;
 use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 
-const FONT_REGULAR: &[u8] = include_bytes!("../fonts/Inter-Regular.ttf");
-const FONT_BOLD: &[u8] = include_bytes!("../fonts/Inter-Bold.ttf");
 
 /// Resolves `data:` URIs synchronously and accumulates parsed resources in a shared buffer.
 ///
@@ -82,25 +80,13 @@ fn make_font_ctx(extra_fonts: &[Vec<u8>]) -> FontContext {
         ..Default::default()
     };
 
-    let regular = font_ctx
-        .collection
-        .register_fonts(Blob::new(Arc::new(FONT_REGULAR) as _), None);
-    font_ctx
-        .collection
-        .register_fonts(Blob::new(Arc::new(FONT_BOLD) as _), None);
-
-    let generic_ids: Vec<_> = if extra_fonts.is_empty() {
-        regular.into_iter().map(|(id, _)| id).collect()
-    } else {
-        let mut ids = Vec::new();
-        for bytes in extra_fonts {
-            let registered = font_ctx
-                .collection
-                .register_fonts(Blob::new(Arc::new(bytes.clone()) as _), None);
-            ids.extend(registered.into_iter().map(|(id, _)| id));
-        }
-        ids
-    };
+    let mut generic_ids = Vec::new();
+    for bytes in extra_fonts {
+        let registered = font_ctx
+            .collection
+            .register_fonts(Blob::new(Arc::new(bytes.clone()) as _), None);
+        generic_ids.extend(registered.into_iter().map(|(id, _)| id));
+    }
 
     for generic in [
         GenericFamily::SansSerif,
@@ -191,13 +177,58 @@ struct PdfOptions {
     #[serde(default)]
     page_size: Option<String>,
     #[serde(default)]
-    margin_mm: Option<f64>,
+    margin_mm: Option<serde_json::Value>,
     #[serde(default)]
     landscape: bool,
     #[serde(default)]
     title: Option<String>,
     #[serde(default)]
+    author: Option<String>,
+    #[serde(default)]
     language: Option<String>,
+    #[serde(default)]
+    fonts: Vec<String>,
+    #[serde(default)]
+    css: Vec<String>,
+    #[serde(default)]
+    bookmarks: bool,
+    #[serde(default)]
+    tagged: bool,
+    #[serde(default)]
+    pdf_ua: bool,
+}
+
+fn parse_margin_mm(v: &serde_json::Value) -> Option<fulgur::Margin> {
+    let mm_pt = |mm: f32| mm * 72.0 / 25.4;
+    match v {
+        serde_json::Value::Number(n) => Some(fulgur::Margin::uniform_mm(n.as_f64()? as f32)),
+        serde_json::Value::String(s) => {
+            let parts: Vec<f32> = s.split_whitespace().filter_map(|p| p.parse().ok()).collect();
+            Some(match parts.as_slice() {
+                [a] => fulgur::Margin::uniform_mm(*a),
+                [v, h] => fulgur::Margin {
+                    top: mm_pt(*v),
+                    right: mm_pt(*h),
+                    bottom: mm_pt(*v),
+                    left: mm_pt(*h),
+                },
+                [t, h, b] => fulgur::Margin {
+                    top: mm_pt(*t),
+                    right: mm_pt(*h),
+                    bottom: mm_pt(*b),
+                    left: mm_pt(*h),
+                },
+                [t, r, b, l] => fulgur::Margin {
+                    top: mm_pt(*t),
+                    right: mm_pt(*r),
+                    bottom: mm_pt(*b),
+                    left: mm_pt(*l),
+                },
+                _ => return None,
+            })
+        }
+        _ => None,
+    }
 }
 
 #[wasm_bindgen]
@@ -220,8 +251,10 @@ pub fn render_pdf(html: &str, options: JsValue) -> Result<Vec<u8>, JsValue> {
         };
         builder = builder.page_size(page_size);
     }
-    if let Some(mm) = opts.margin_mm {
-        builder = builder.margin(fulgur::Margin::uniform_mm(mm as f32));
+    if let Some(margin_val) = opts.margin_mm.as_ref() {
+        if let Some(margin) = parse_margin_mm(margin_val) {
+            builder = builder.margin(margin);
+        }
     }
     if opts.landscape {
         builder = builder.landscape(true);
@@ -229,8 +262,37 @@ pub fn render_pdf(html: &str, options: JsValue) -> Result<Vec<u8>, JsValue> {
     if let Some(title) = opts.title {
         builder = builder.title(title);
     }
+    if let Some(author) = opts.author {
+        builder = builder.author(author);
+    }
     if let Some(lang) = opts.language {
         builder = builder.lang(lang);
+    }
+    if opts.bookmarks {
+        builder = builder.bookmarks(true);
+    }
+    if opts.tagged {
+        builder = builder.tagged(true);
+    }
+    if opts.pdf_ua {
+        builder = builder.pdf_ua(true);
+    }
+
+    if !opts.fonts.is_empty() || !opts.css.is_empty() {
+        let mut assets = fulgur::AssetBundle::new();
+        for b64 in &opts.fonts {
+            let bytes = general_purpose::STANDARD
+                .decode(b64)
+                .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(b64))
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            assets
+                .add_font_bytes(bytes)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        }
+        for css_str in &opts.css {
+            assets.add_css(css_str);
+        }
+        builder = builder.assets(assets);
     }
 
     let engine = builder.build();

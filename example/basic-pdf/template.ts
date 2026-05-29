@@ -679,6 +679,11 @@ export const html = `<!DOCTYPE html>
     }
   }
 }
+:root {
+  --font-sans: 'Inter', sans-serif;
+  --default-font-family: 'Inter', sans-serif;
+}
+body, html { font-family: 'Inter', sans-serif; }
 </style></head>
 <body>
 	<main data-theme="corporate">

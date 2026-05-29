@@ -1,7 +1,15 @@
 import { skreenPdf } from "../../mod.ts";
 import { html } from "./template.ts";
 
-const pdf = await skreenPdf({ data: html, pageSize: "A4", marginMm: 20 });
+const pdf = await skreenPdf({
+	data: html,
+	pageSize: "A4",
+	marginMm: 20,
+	fonts: [
+		new URL("../../fonts/Inter-Regular.ttf", import.meta.url).pathname,
+		new URL("../../fonts/Inter-Bold.ttf", import.meta.url).pathname,
+	],
+});
 
 await Deno.writeFile("example/basic-pdf/sample.pdf", pdf);
 

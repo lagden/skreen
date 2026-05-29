@@ -1,6 +1,6 @@
 {
 	"name": "@tadashi/skreen",
-	"version": "3.0.9",
+	"version": "4.0.0",
 	"description": "Render HTML to PNG screenshots or a selectable-text PDF using a Rust core.",
 	"license": "MIT",
 	"runtime": ["deno"],
