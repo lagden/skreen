@@ -9,9 +9,13 @@
 	},
 	"publish": {
 		"include": [
-			"mod.ts",
+			"fonts/",
 			"wasm/",
+			"mod.ts",
 			"README.md"
+		],
+		"exclude": [
+			"fonts/*.ttf"
 		]
 	},
 	"tasks": {
