@@ -64,10 +64,16 @@ function isUrl(s: string): boolean {
 }
 
 /**
- * Detects musl libc on Linux by scanning the process memory map.
- * Falls back to false (glibc) on any read error (non-Linux, permission denied, etc.).
+ * Detects musl libc on Linux.
+ *
+ * Checks /etc/alpine-release first because Deno ships as a static binary —
+ * its own maps entry never contains "musl" even on Alpine, making the
+ * /proc/self/maps heuristic unreliable there.
  */
 function isMusl(): boolean {
+	try {
+		if (Deno.readTextFileSync("/etc/alpine-release").length > 0) return true;
+	} catch { /* not Alpine */ }
 	try {
 		return Deno.readTextFileSync("/proc/self/maps").includes("musl");
 	} catch {
