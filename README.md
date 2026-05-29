@@ -2,18 +2,18 @@
 
 A Deno/JSR library that renders HTML to a **PNG screenshot** or a **selectable-text PDF** using a single Rust/WASM core.
 
-| Output | Engine |
-| ------ | ------ |
-| PNG | [Blitz](https://github.com/DioxusLabs/blitz) + [Vello](https://github.com/linebender/vello) (CPU renderer) |
-| PDF | [fulgur](https://github.com/fulgur-rs/fulgur) (Blitz-based, multi-page, selectable text) |
+| Output | Engine                                                                                                     |
+| ------ | ---------------------------------------------------------------------------------------------------------- |
+| PNG    | [Blitz](https://github.com/DioxusLabs/blitz) + [Vello](https://github.com/linebender/vello) (CPU renderer) |
+| PDF    | [fulgur](https://github.com/fulgur-rs/fulgur) (Blitz-based, multi-page, selectable text)                   |
 
 Both paths run entirely inside the WASM module — no native binaries, no `--allow-run`, no npm dependencies.
 
 The input can be a URL (fetched by the TypeScript layer) or a raw HTML string. The output is a `Uint8Array` containing
 the encoded PNG or PDF bytes.
 
-> **JavaScript is not executed.** The WASM renderer is a pure layout engine. Tailwind CSS and similar frameworks must
-> be pre-processed and inlined before rendering.
+> **JavaScript is not executed.** The WASM renderer is a pure layout engine. Tailwind CSS and similar frameworks must be
+> pre-processed and inlined before rendering.
 
 ---
 
@@ -25,8 +25,8 @@ Always pass at least one font via the `fonts` option:
 
 ```ts
 const pdf = await skreenPdf({
-  data: html,
-  fonts: ["/usr/share/fonts/Inter-Regular.ttf"],
+	data: html,
+	fonts: ["/usr/share/fonts/Inter-Regular.ttf"],
 });
 ```
 
@@ -36,11 +36,11 @@ The `fonts` option accepts **file paths** (`string`) or **raw bytes** (`Uint8Arr
 const customFont = await Deno.readFile("./MyFont.ttf");
 
 const png = await skreen({
-  data: html,
-  fonts: [
-    "/usr/share/fonts/Inter-Regular.ttf", // resolved by Deno at runtime
-    customFont,                            // already in memory
-  ],
+	data: html,
+	fonts: [
+		"/usr/share/fonts/Inter-Regular.ttf", // resolved by Deno at runtime
+		customFont, // already in memory
+	],
 });
 ```
 
@@ -49,11 +49,13 @@ Reference them in your CSS with `font-family`:
 
 ```css
 /* This works — "Inter" is the family name embedded in Inter-Regular.ttf */
-body { font-family: 'Inter', sans-serif; }
+body {
+	font-family: "Inter", sans-serif;
+}
 ```
 
-> No `@font-face` declarations are needed when passing fonts through the `fonts` option.
-> For PDF, `@font-face { src: url('file://...') }` also works and lets fulgur load fonts directly by path.
+> No `@font-face` declarations are needed when passing fonts through the `fonts` option. For PDF,
+> `@font-face { src: url('file://...') }` also works and lets fulgur load fonts directly by path.
 
 ---
 
@@ -65,11 +67,11 @@ body { font-family: 'Inter', sans-serif; }
 import { skreen } from "jsr:@tadashi/skreen";
 
 const png = await skreen({
-  data: "<html><body><h1>Hello World</h1></body></html>",
-  width: 800,
-  height: 600,
-  scale: 2.0,
-  fonts: ["/usr/share/fonts/Inter-Regular.ttf"],
+	data: "<html><body><h1>Hello World</h1></body></html>",
+	width: 800,
+	height: 600,
+	scale: 2.0,
+	fonts: ["/usr/share/fonts/Inter-Regular.ttf"],
 });
 
 await Deno.writeFile("screenshot.png", png);
@@ -90,15 +92,15 @@ const png = await skreen({ data: "https://example.com", fonts: ["/path/to/font.t
 import { skreenPdf } from "jsr:@tadashi/skreen";
 
 const pdf = await skreenPdf({
-  data: "<html><body><h1>Hello World</h1></body></html>",
-  pageSize: "A4",
-  marginMm: 20,
-  title: "My Document",
-  author: "Thiago",
-  fonts: [
-    "/usr/share/fonts/Inter-Regular.ttf",
-    "/usr/share/fonts/Inter-Bold.ttf",
-  ],
+	data: "<html><body><h1>Hello World</h1></body></html>",
+	pageSize: "A4",
+	marginMm: 20,
+	title: "My Document",
+	author: "Thiago",
+	fonts: [
+		"/usr/share/fonts/Inter-Regular.ttf",
+		"/usr/share/fonts/Inter-Bold.ttf",
+	],
 });
 
 await Deno.writeFile("output.pdf", pdf);
@@ -116,12 +118,12 @@ import { skreen } from "jsr:@tadashi/skreen";
 const roboto = await Deno.readFile("./Roboto-VariableFont.ttf");
 
 const png = await skreen({
-  data: `<html><head><style>body { font-family: Roboto, sans-serif; }</style></head>
+	data: `<html><head><style>body { font-family: Roboto, sans-serif; }</style></head>
          <body><h1>The quick brown fox</h1></body></html>`,
-  width: 600,
-  height: 0,
-  scale: 2,
-  fonts: [roboto],
+	width: 600,
+	height: 0,
+	scale: 2,
+	fonts: [roboto],
 });
 
 await Deno.writeFile("screenshot.png", png);
@@ -138,12 +140,12 @@ See the full working examples in [example/basic/](example/basic/), [example/basi
 
 Returns a PNG image as a `Uint8Array`.
 
-| Option   | Type                          | Default | Description                                                               |
-| -------- | ----------------------------- | ------- | ------------------------------------------------------------------------- |
-| `data`   | `string`                      | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string. |
-| `width`  | `number`                      | `1200`  | Viewport width in logical pixels.                                         |
-| `height` | `number`                      | `800`   | Minimum viewport height in logical pixels. Use `0` to expand to content.  |
-| `scale`  | `number`                      | `2.0`   | Device pixel ratio. Use `2.0` for HiDPI/retina output.                    |
+| Option   | Type                          | Default | Description                                                                                                             |
+| -------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `data`   | `string`                      | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string.                                               |
+| `width`  | `number`                      | `1200`  | Viewport width in logical pixels.                                                                                       |
+| `height` | `number`                      | `800`   | Minimum viewport height in logical pixels. Use `0` to expand to content.                                                |
+| `scale`  | `number`                      | `2.0`   | Device pixel ratio. Use `2.0` for HiDPI/retina output.                                                                  |
 | `fonts`  | `Array<string \| Uint8Array>` | —       | Font files to embed. Strings are treated as file paths; `Uint8Array` as raw bytes. **Text is invisible without fonts.** |
 
 The final image height is determined by the rendered document height (capped at 4000 logical pixels).
@@ -152,20 +154,20 @@ The final image height is determined by the rendered document height (capped at 
 
 Returns a PDF file as a `Uint8Array`.
 
-| Option      | Type                          | Default | Description                                                                                   |
-| ----------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| `data`      | `string`                      | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string.                     |
-| `pageSize`  | `string`                      | `"A4"`  | Page size: `"A4"`, `"A3"`, or `"Letter"`.                                                     |
-| `landscape` | `boolean`                     | —       | Landscape orientation.                                                                        |
-| `marginMm`  | `number \| string`            | —       | Page margins in mm. Accepts CSS shorthand: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`. |
-| `title`     | `string`                      | —       | Document title written into PDF metadata.                                                     |
-| `author`    | `string`                      | —       | Document author written into PDF metadata.                                                    |
-| `language`  | `string`                      | —       | Document language tag (BCP 47, e.g. `"en"`, `"pt-BR"`). Required for PDF/UA-1.               |
+| Option      | Type                          | Default | Description                                                                                                             |
+| ----------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `data`      | `string`                      | —       | **Required.** A URL (`http://`, `https://`, `file://`) or an HTML string.                                               |
+| `pageSize`  | `string`                      | `"A4"`  | Page size: `"A4"`, `"A3"`, or `"Letter"`.                                                                               |
+| `landscape` | `boolean`                     | —       | Landscape orientation.                                                                                                  |
+| `marginMm`  | `number \| string`            | —       | Page margins in mm. Accepts CSS shorthand: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`.                            |
+| `title`     | `string`                      | —       | Document title written into PDF metadata.                                                                               |
+| `author`    | `string`                      | —       | Document author written into PDF metadata.                                                                              |
+| `language`  | `string`                      | —       | Document language tag (BCP 47, e.g. `"en"`, `"pt-BR"`). Required for PDF/UA-1.                                          |
 | `fonts`     | `Array<string \| Uint8Array>` | —       | Font files to embed. Strings are treated as file paths; `Uint8Array` as raw bytes. **Text is invisible without fonts.** |
-| `css`       | `string[]`                    | —       | CSS strings to inject into the document.                                                      |
-| `bookmarks` | `boolean`                     | —       | Generate PDF bookmarks (outline) from `h1`–`h6` headings.                                    |
-| `tagged`    | `boolean`                     | —       | Enable Tagged PDF output (structure tree for accessibility).                                  |
-| `pdfUa`     | `boolean`                     | —       | Enable PDF/UA-1 conformance (implies `tagged` and `bookmarks`).                               |
+| `css`       | `string[]`                    | —       | CSS strings to inject into the document.                                                                                |
+| `bookmarks` | `boolean`                     | —       | Generate PDF bookmarks (outline) from `h1`–`h6` headings.                                                               |
+| `tagged`    | `boolean`                     | —       | Enable Tagged PDF output (structure tree for accessibility).                                                            |
+| `pdfUa`     | `boolean`                     | —       | Enable PDF/UA-1 conformance (implies `tagged` and `bookmarks`).                                                         |
 
 ---
 
