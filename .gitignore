@@ -15,3 +15,8 @@ node_modules
 
 # IA
 .claude/settings.local.json
+
+# outputs
+example/basic/sample.png
+example/basic-pdf/sample.pdf
+example/custom-font/sample-font.png
