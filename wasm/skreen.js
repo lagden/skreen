@@ -140,7 +140,10 @@ const cachedTextEncoder = new TextEncoder();
 let WASM_VECTOR_LEN = 0;
 
 const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);
-const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
+const _wasmBytes = wasmUrl.protocol === 'file:'
+  ? await Deno.readFile(wasmUrl)
+  : await (await fetch(wasmUrl)).arrayBuffer();
+const wasmInstantiated = await WebAssembly.instantiate(_wasmBytes, __wbg_get_imports());
 const wasmInstance = wasmInstantiated.instance;
 const wasm = wasmInstance.exports;
 wasm.__wbindgen_start();

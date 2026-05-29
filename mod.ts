@@ -1,6 +1,5 @@
 import { createRequire } from "node:module";
 import { decodeBase64 } from "@std/encoding/base64";
-import { render_html } from "./wasm/skreen.js";
 // Static import so Deno tracks @fulgur-rs/cli as a dependency and installs it (with platform
 // binaries) in node_modules. Uses package.json to avoid executing any binary entry point.
 import "npm:@fulgur-rs/cli@0.16.0/package.json" with { type: "json" };
@@ -172,6 +171,9 @@ export async function skreen({
 	scale = 2.0,
 	fonts,
 }: SkreenOptions): Promise<Uint8Array> {
+	// Lazy import: the WASM file is fetched via top-level await inside skreen.js.
+	// Importing dynamically here avoids a network request in environments that only use skreenPdf.
+	const { render_html } = await import("./wasm/skreen.js");
 	const html = isUrl(data) ? await fetch(data).then((r) => r.text()) : data;
 	return render_html(html, width, height, scale, fonts ?? null);
 }

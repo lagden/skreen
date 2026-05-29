@@ -30,21 +30,36 @@ await run("wasm-bindgen", [
 	"./target/wasm32-unknown-unknown/release/skreen.wasm",
 ]);
 
+// Patch skreen.js to load the WASM via Deno.readFile when running from a local file://
+// path (e.g. deno vendor / "vendor": true), falling back to fetch for remote URLs.
+// This avoids network requests at runtime in sandboxed environments (e.g. ECS Fargate).
+// Deno's vendor tool recognises new URL('...', import.meta.url) and includes the .wasm
+// file in the vendor directory, so Deno.readFile will find it there at runtime.
+{
+	const jsPath = "./wasm/skreen.js";
+	let js = await Deno.readTextFile(jsPath);
+	js = js.replace(
+		`const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);\nconst wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());`,
+		`const wasmUrl = new URL('skreen_bg.wasm', import.meta.url);\n` +
+			`const _wasmBytes = wasmUrl.protocol === 'file:'\n` +
+			`  ? await Deno.readFile(wasmUrl)\n` +
+			`  : await (await fetch(wasmUrl)).arrayBuffer();\n` +
+			`const wasmInstantiated = await WebAssembly.instantiate(_wasmBytes, __wbg_get_imports());`,
+	);
+	await Deno.writeTextFile(jsPath, js);
+	console.log("Patched wasm/skreen.js → Deno.readFile for file:// URLs");
+}
+
 // Patch the WASM URL for remote hosting (e.g. GitHub Releases).
 // Set WASM_URL to an absolute URL before running the build.
 const wasmUrlEnv = Deno.env.get("WASM_URL");
 if (wasmUrlEnv) {
 	const jsPath = "./wasm/skreen.js";
 	let js = await Deno.readTextFile(jsPath);
-	js = js
-		.replace(
-			"new URL('skreen_bg.wasm', import.meta.url)",
-			`new URL('${wasmUrlEnv}')`,
-		)
-		.replace(
-			"await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports())",
-			"await WebAssembly.instantiate(await (await fetch(wasmUrl)).arrayBuffer(), __wbg_get_imports())",
-		);
+	js = js.replace(
+		"new URL('skreen_bg.wasm', import.meta.url)",
+		`new URL('${wasmUrlEnv}')`,
+	);
 	await Deno.writeTextFile(jsPath, js);
 	console.log(`Patched WASM URL → ${wasmUrlEnv}`);
 }
